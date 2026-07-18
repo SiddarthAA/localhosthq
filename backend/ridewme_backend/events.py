@@ -22,10 +22,9 @@ NOTICE = "notice"
 WARN = "warn"
 ALARM = "alarm"
 
-DETECTED = "detected"
-CONFIRMED = "confirmed"
-DISPATCHED = "dispatched"
-CANCELLED = "cancelled"
+UNCONFIRMED = "unconfirmed"   # crash: Layer 2 passed -> fleet only
+CONFIRMED = "confirmed"       # crash: Layer 3 elapsed -> emergency services
+CANCELLED = "cancelled"       # crash: driver cancel or sustained normal driving
 
 
 def canonical_bytes(event: dict[str, Any]) -> bytes:

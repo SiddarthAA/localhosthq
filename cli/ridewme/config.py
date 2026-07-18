@@ -81,16 +81,34 @@ class Tuning:
     idle_score: float = 8.0                     # below this + no fired signals = candidate for idle
     idle_grace_s: float = 5.0                   # must stay quiet this long before dropping fps
 
-    # crash fusion
-    accel_baseline_tau_s: float = 3.0           # EMA window for the accel baseline (absorbs gravity)
-    accel_spike_g: float = 2.5                  # linear-accel magnitude spike over baseline (g)
-    speed_drop_mps: float = 6.0                 # sudden GPS speed drop within the window
-    speed_drop_window_s: float = 1.5
-    rotation_dps: float = 200.0                 # gyro magnitude (deg/s) = large rotation
-    crash_agree_window_s: float = 1.0           # the >=2 signals must land within this window
-    severity_moderate_g: float = 3.5
-    severity_severe_g: float = 6.0
-    cancel_window_s: float = 10.0               # driver-cancel countdown before dispatch
+    # ── crash engine (design §11) ────────────────────────────────────
+    # Sensor ingest / ring buffer
+    sensor_ring_s: float = 5.0                  # rolling buffer length (pre+post window always available)
+    accel_baseline_tau_s: float = 3.0           # slow EMA baseline (absorbs gravity + mounting)
+    motion_stale_s: float = 3.0                 # motion older than this -> gate assumes moving (fail-safe)
+    # Pre-gate
+    pregate_min_speed_mps: float = 2.0          # was the vehicle moving before the candidate?
+    # Layer 1 — trigger (cheap wake-up, not a decision)
+    accel_spike_g: float = 2.5                  # accel deviation (g) that wakes Layer 2
+    # Layer 2 — corroboration over the window
+    crash_l2_window_s: float = 2.0              # score this window around the candidate
+    jerk_g_per_s: float = 20.0                  # impact jerk — separates a crash from hard braking
+    gyro_axis_dps: float = 150.0                # per-axis rotation (deg/s); need >= 2 axes
+    gyro_axes_required: int = 2
+    speed_drop_mps: float = 6.0                 # sudden GPS speed drop across the window...
+    speed_drop_end_mps: float = 3.0             # ...toward (near) zero — impact, not gradual braking
+    severity_moderate_g: float = 3.5            # peak-Δg severity bands: minor < 3.5 ...
+    severity_severe_g: float = 6.0              # ... moderate 3.5–6 · severe > 6
+    # Layer 3 — behavioral confirmation window
+    crash_l3_window_s: float = 13.0             # base human window (12–15s)
+    crash_l3_window_severe_s: float = 8.0       # severe escalates faster (shorter window)
+    deescalate_speed_mps: float = 8.0           # "sustained normal driving" road speed
+    deescalate_sustained_s: float = 10.0        # ...held this long -> de-escalate (cancel)
+    crash_cooldown_s: float = 5.0               # after a terminal outcome, ignore new candidates
+
+    # correlation (design §5) — crash payload's fatigue_context
+    fatigue_window_min: float = 5.0             # look back this far for recent fatigue
+    fatigue_elevated_score: float = 45.0        # score >= this (warn) counts as "elevated"
 
     # emission cadence
     heartbeat_s: float = 5.0

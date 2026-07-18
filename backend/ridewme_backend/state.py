@@ -7,7 +7,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
-from .events import CANCELLED, CONFIRMED, CRASH, DETECTED, DROWSINESS, HEARTBEAT
+from .events import CANCELLED, CONFIRMED, CRASH, DROWSINESS, HEARTBEAT, UNCONFIRMED
 
 
 class StateStore:
@@ -51,11 +51,13 @@ class StateStore:
 
     def _apply_crash(self, st: dict, ev: dict, p: dict) -> None:
         status = p.get("status")
-        if status == DETECTED:
+        if status == UNCONFIRMED:
             st["active_incident"] = {
                 "incident_id": p.get("incident_id"), "driver_id": ev.get("driver_id"),
                 "severity": p.get("severity"), "status": status, "peak_g": p.get("peak_g"),
-                "reasons": p.get("reasons"), "location": p.get("location"),
+                "jerk": p.get("jerk"), "signals_fired": p.get("signals_fired"),
+                "location": p.get("location"), "window_seconds": p.get("window_seconds"),
+                "fatigue_context": p.get("fatigue_context"),
                 "detected_at": p.get("ts_detected", ev.get("ts")), "resolved_at": None,
             }
         else:
@@ -63,6 +65,10 @@ class StateStore:
             if ai and ai.get("incident_id") == p.get("incident_id"):
                 ai["status"] = status
                 ai["resolved_at"] = ev.get("ts")
+                if p.get("reason"):
+                    ai["reason"] = p.get("reason")
+                if p.get("final_motion"):
+                    ai["final_motion"] = p.get("final_motion")
                 if status == CANCELLED:
                     st["active_incident"] = None  # cleared; confirmed stays visible
 

@@ -33,13 +33,17 @@ def _build_sources(cfg, args):
     return S.PhoneFeatureSource(cfg), S.PhoneSensorSource(cfg)
 
 
-def _cancel_listener(daemon) -> None:
-    """Type 'c' + Enter to cancel a pending crash dispatch (driver override)."""
+def _console_listener(daemon) -> None:
+    """Demo/console input: 'c'+Enter cancels a pending crash (stands in for the
+    physical/voice cancel button); 'x'+Enter simulates an impact (design §10)."""
     if not sys.stdin or not sys.stdin.isatty():
         return
     for line in sys.stdin:
-        if line.strip().lower() == "c":
+        cmd = line.strip().lower()
+        if cmd == "c":
             daemon.cancel_crash()
+        elif cmd == "x":
+            daemon.simulate_impact()
 
 
 def main() -> None:
@@ -65,7 +69,7 @@ def main() -> None:
 
     fsrc, ssrc = _build_sources(cfg, args)
     daemon = Daemon(cfg, fsrc, ssrc)
-    threading.Thread(target=_cancel_listener, args=(daemon,), daemon=True).start()
+    threading.Thread(target=_console_listener, args=(daemon,), daemon=True).start()
     daemon.run()
 
 

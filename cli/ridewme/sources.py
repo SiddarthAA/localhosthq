@@ -14,6 +14,7 @@ from __future__ import annotations
 import json
 import threading
 import time
+from collections import deque
 from typing import Protocol
 
 from .signals import RawFeatures
@@ -25,7 +26,8 @@ class FeatureSource(Protocol):
 
 
 class SensorSource(Protocol):
-    def latest(self) -> dict: ...
+    def drain(self) -> list[dict]: ...       # ALL samples since last call (crash engine — no loss)
+    def latest(self) -> dict: ...            # freshest only (convenience)
     @property
     def connected(self) -> bool: ...
     def close(self) -> None: ...
@@ -155,6 +157,8 @@ class PhoneSensorSource:
     def __init__(self, cfg):
         self._url = cfg.sensor_ws_url
         self._latest: dict = {}
+        self._buf: deque = deque(maxlen=2000)   # capture EVERY packet (crashes peak <100 ms)
+        self._lock = threading.Lock()
         self._connected = False
         self._stop = False
         threading.Thread(target=self._loop, daemon=True).start()
@@ -173,12 +177,21 @@ class PhoneSensorSource:
                     if not msg:
                         break
                     try:
-                        self._latest = json.loads(msg)
+                        pkt = json.loads(msg)
                     except ValueError:
-                        pass
+                        continue
+                    self._latest = pkt
+                    with self._lock:
+                        self._buf.append(pkt)
             except Exception:
                 self._connected = False
                 time.sleep(1.0)
+
+    def drain(self) -> list[dict]:
+        with self._lock:
+            out = list(self._buf)
+            self._buf.clear()
+        return out
 
     def latest(self) -> dict:
         return dict(self._latest)
@@ -192,30 +205,38 @@ class PhoneSensorSource:
 
 
 class SyntheticSensorSource:
-    """Scripted sensor stream: moving vehicle, with an optional crash at `crash_at`
-    seconds (an accel spike + rotation + speed drop => >=2 of 3 fire)."""
+    """Scripted sensor stream. Normal driving, then an optional **severe crash** at
+    `crash_at`: a ~0.4s impact (huge accel + jerk + rotation on 2 axes + speed→0)
+    followed by the vehicle stopped-and-staying-stopped, so Layer 2 corroborates
+    and Layer 3 confirms. `drain()` returns one freshly-synthesized sample per call."""
 
     def __init__(self, _cfg=None, crash_at: float | None = 55.0):
         self._t0 = time.monotonic()
         self.crash_at = crash_at
 
-    def latest(self) -> dict:
-        e = time.monotonic() - self._t0
+    def _sample(self, e: float) -> dict:
         speed = min(12.0, e * 2.0)
         accelG = {"x": 0.0, "y": 0.0, "z": 9.8}
         gyro = {"alpha": 1.0, "beta": 1.0, "gamma": 1.0}
-        if self.crash_at is not None and abs(e - self.crash_at) < 0.4:
-            accelG = {"x": 40.0, "y": 10.0, "z": 9.8}   # ~4.3g
-            gyro = {"alpha": 250.0, "beta": 50.0, "gamma": 30.0}
-            speed = 0.0
+        if self.crash_at is not None and e >= self.crash_at:
+            speed = 0.0                                   # crashed -> stopped, stays stopped
+            if e - self.crash_at < 0.4:                   # the impact itself
+                accelG = {"x": 70.0, "y": 20.0, "z": 9.8}  # ~7.4g peak -> severe
+                gyro = {"alpha": 260.0, "beta": 210.0, "gamma": 30.0}  # 2 axes hot
         return {
-            "device": "sim", "t": time.time() * 1000.0, "mono": e * 1000.0, "interval": 0.05,
+            "device": "sim", "t": time.time() * 1000.0, "mono": e * 1000.0, "interval": 0.02,
             "accel": {"x": accelG["x"], "y": accelG["y"], "z": accelG["z"] - 9.8},
             "accelG": accelG, "gyro": gyro,
             "orient": {"alpha": 0.0, "beta": 0.0, "gamma": 0.0, "compass": 90.0},
             "gps": {"lat": 12.97, "lon": 77.59, "alt": 900.0, "acc": 5.0,
                     "speed": speed, "heading": 90.0},
         }
+
+    def drain(self) -> list[dict]:
+        return [self._sample(time.monotonic() - self._t0)]
+
+    def latest(self) -> dict:
+        return self._sample(time.monotonic() - self._t0)
 
     @property
     def connected(self) -> bool:

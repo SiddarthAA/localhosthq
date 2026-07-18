@@ -18,10 +18,12 @@ from . import events as E
 from .audio import AudioEngine
 from .calibration import BaselineCalibrator
 from .config import Config
+from .crash import CrashEngine
 from .dutycycle import DutyCycler
 from .escalation import Escalator
-from .fusion import CrashFusion, IncidentManager
+from .fatigue import FatigueHistory
 from .gating import ContextGate
+from .motion import MotionState
 from .naive import NaiveDetector
 from .outbox import Outbox
 from .signals import SignalExtractor
@@ -55,12 +57,13 @@ class Daemon:
         self.esc = Escalator(self.t)
         self.audio = AudioEngine(cfg.audio_enabled)
         self.duty = DutyCycler(self.t)
-        self.fusion = CrashFusion(self.t)
-        self.incidents = IncidentManager(self.t, self.session_id)
+        self.motion = MotionState(self.t.moving_mps, self.t.motion_stale_s)   # Seam 1
+        self.fatigue = FatigueHistory(self.t.fatigue_window_min, self.t.fatigue_elevated_score)
+        self.crash = CrashEngine(self.t, self.motion, self.session_id,
+                                 emit_fn=self._emit_crash, fatigue_fn=self.fatigue.context,
+                                 alarm_fn=self.audio.crash_alarm)
         self.naive = NaiveDetector() if cfg.naive_mode else None
 
-        self._speed: float | None = None
-        self._speed_lock = threading.Lock()
         self._emit_lock = threading.Lock()   # serialize chain.make across threads
         self._stop = threading.Event()
 
@@ -72,14 +75,6 @@ class Daemon:
         self._naive_last = E.AWAKE
 
     # ── shared state ──────────────────────────────────────────────────
-    def _set_speed(self, v):
-        with self._speed_lock:
-            self._speed = v
-
-    def _get_speed(self):
-        with self._speed_lock:
-            return self._speed
-
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
         # Persist to the durable outbox under the same lock that advances the chain,
         # so on-disk order matches seq order. The uplink drains it independently.
@@ -121,10 +116,11 @@ class Daemon:
             self.shutdown()
 
     def cancel_crash(self) -> None:
-        upd = self.incidents.cancel(time.time())
-        if upd:
-            self._emit_crash(upd, time.time())
+        if self.crash.cancel(time.time()):
             print("[crash] cancelled by driver.")
+
+    def simulate_impact(self) -> None:
+        self.crash.simulate_impact(time.time())
 
     def shutdown(self) -> None:
         self._stop.set()
@@ -167,7 +163,8 @@ class Daemon:
             baseline = self.calib.update(raw, ts)          # L2
             sig = self.extractor.update(raw, ts, baseline)  # L1
             trust = self.trust.update(sig, baseline, dt)    # L3
-            gated, reason = self.gate.evaluate(self._get_speed())  # L4
+            self.fatigue.update(ts, trust.score)            # feed the crash-correlation history
+            gated, reason = self.gate.evaluate(self.motion.moving_for_gate(ts))  # L4 (Seam 1)
             esc = self.esc.update(trust.score, dt, gated)   # L5
             self.audio.on_escalation(esc.effective_level, esc.audio_intensity)
             duty = self.duty.update(trust.score, trust.agree_count, ts)  # L6
@@ -228,44 +225,33 @@ class Daemon:
         }
         self._emit(E.DROWSINESS, payload, ts)
 
-    # ── sensor loop: crash fusion + incident lifecycle ────────────────
+    # ── sensor loop: ring buffer -> crash engine (design §3, §4) ──────
     def _sensor_loop(self) -> None:
         while not self._stop.is_set():
-            now = time.time()
-            packet = self.ssrc.latest()
-            if packet:
-                sp = self.fusion.latest_speed(packet)
-                if sp is not None:
-                    self._set_speed(sp)
-                sig = self.fusion.update(packet, now)
-                if sig:
-                    upd = self.incidents.on_signal(sig, now)
-                    if upd:
-                        self._emit_crash(upd, now)
-            upd = self.incidents.tick(now)
-            if upd:
-                self._emit_crash(upd, now)
-            self._stop.wait(0.05)  # ~20 Hz
+            for pkt in self.ssrc.drain():          # every source-timestamped sample, no loss
+                if not pkt:
+                    continue
+                src = pkt.get("t")
+                ts = src / 1000.0 if isinstance(src, (int, float)) else time.time()
+                self.crash.ingest(pkt, ts)
+            self.crash.tick(time.time())            # Layer 2 eval + Layer 3 countdown
+            self._stop.wait(0.02)                   # ~50 Hz (crashes peak <100 ms)
 
-    def _emit_crash(self, upd, ts) -> None:
-        inc = upd.incident
-        payload = {
-            "incident_id": inc.incident_id,
-            "status": upd.status,
-            "severity": inc.severity,
-            "peak_g": inc.peak_g,
-            "reasons": inc.reasons,
-            "agree_count": len(inc.reasons),
-            "cancel_window_s": upd.cancel_window_s,
-            "location": inc.location,
-            "ts_detected": _r(inc.detected_at),
-        }
+    def _emit_crash(self, payload: dict, ts: float) -> None:
+        """Emit callback wired into the crash engine. One signed timeline (Seam 2/3)."""
         self._emit(E.CRASH, payload, ts)
-        if upd.status == E.DETECTED:
-            print(f"[CRASH] {inc.severity} peak={inc.peak_g}g reasons={inc.reasons} "
-                  f"-> cancel within {upd.cancel_window_s:.0f}s ('c' to cancel)")
-        else:
-            print(f"[CRASH] {inc.incident_id} -> {upd.status}")
+        status = payload.get("status")
+        if status == E.UNCONFIRMED:
+            fc = payload.get("fatigue_context") or {}
+            tag = "  [elevated fatigue preceding crash]" if fc.get("was_elevated") else ""
+            print(f"[CRASH] unconfirmed · {payload['severity']} peak={payload['peak_g']}g "
+                  f"signals={payload['signals_fired']} -> {payload['window_seconds']:.0f}s window "
+                  f"('c' cancel){tag}")
+        elif status == E.CONFIRMED:
+            print(f"[CRASH] CONFIRMED · {payload['incident_id']} "
+                  f"motion={payload.get('final_motion')} -> DISPATCH @ {payload.get('location')}")
+        else:  # cancelled
+            print(f"[CRASH] cancelled · {payload['incident_id']} reason={payload.get('reason')}")
 
     # ── heartbeat ─────────────────────────────────────────────────────
     def _heartbeat_loop(self) -> None:
@@ -279,7 +265,7 @@ class Daemon:
                 "camera_ok": self._camera_ok,
                 "sensors_ok": bool(self.ssrc.connected),
                 "calibrated": self.calib.ready,
-                "speed_mps": self._get_speed(),
+                "speed_mps": self.motion.get().speed_mps,
                 "link": self.uplink.mode,                    # online | degraded | offline
                 "pending": self.uplink.pending(),            # un-acked backlog in the edge outbox
                 "last_ack_age_s": self.uplink.last_ack_age(),

@@ -100,23 +100,33 @@ throttled **sample** (default 1 Hz) whenever `level != awake` or `score > 0`.
 - `fired` — which signals are currently active/agreeing; `agree_count = len(fired)`.
 - `gated` — L4 suppressed escalation (e.g. vehicle parked); `gate_reason` e.g. `"not_moving"`.
 
-**`crash`** — from the sensor-fusion track. One event per lifecycle transition (all chained).
+**`crash`** — from the sensor-fusion track (Feature 2). One event per lifecycle transition (chained).
 ```json
 { "incident_id": "crash-<session>-<n>",
-  "status": "detected",
-  "severity": "moderate",
-  "peak_g": 4.7,
-  "reasons": ["accel_spike", "rotation"],
-  "agree_count": 2,
-  "cancel_window_s": 10,
+  "status": "unconfirmed",
+  "severity": "severe",
+  "peak_g": 7.5,
+  "jerk": 320.0,
+  "signals_fired": ["accel_jerk", "gyro", "speed_drop"],
   "location": { "lat": 12.97, "lon": 77.59, "speed_mps": 0.0 },
-  "ts_detected": 1721300000.0 }
+  "window_seconds": 8.0,
+  "cancel_window_s": 8.0,
+  "fatigue_context": { "recent_max_score": 78.0, "was_elevated": true,
+                       "elevated_seconds": 240.0, "sampled_over_minutes": 5.0 },
+  "ts_detected": 1721300000.0,
+  "reason": "driver",          // only on cancelled: "driver" | "deescalated_motion"
+  "final_motion": "stopped" }  // only on confirmed: "stopped" | "moving"
 ```
-- `status` lifecycle: `detected` → then either `cancelled` (driver hit cancel within the window) or
-  `confirmed` → `dispatched`. Fleet alert is **instant on `detected`**; authority dispatch is gated
-  behind the `cancel_window_s` countdown ("we don't call 112 on a pothole").
-- `severity` ∈ `minor | moderate | severe` (bucketed by `peak_g`).
-- `reasons` ⊆ `["accel_spike", "speed_drop", "rotation"]`; fires only when `agree_count >= 2`.
+- **Lifecycle** `unconfirmed → confirmed | cancelled` (the internal `candidate` from Layer 1 is
+  never emitted). `unconfirmed` = Layer 2 corroboration passed → **fleet manager only**, a human
+  window starts. `cancelled` = driver cancelled OR sustained normal driving (`reason`). `confirmed`
+  = the window elapsed consistent → **emergency services** (`final_motion`).
+- **Who-hears-what (hard rule):** the ONLY path to emergency dispatch is `confirmed`. Unconfirmed
+  never leaves the fleet dashboard. "We don't call 112 on a pothole."
+- `severity` ∈ `minor | moderate | severe`; severe shortens the window (faster escalation).
+- `signals_fired` ⊆ `["accel_jerk", "gyro", "speed_drop"]`; confirms only when **≥ 2 agree**.
+- `fatigue_context` (design §5) — the crash's recent drowsiness correlation. `was_elevated:true`
+  after a rising fatigue score = a likely **fatigue-caused crash**.
 
 ---
 
@@ -183,16 +193,27 @@ On connect the server sends a **snapshot**, then pushes deltas. Message shapes:
 | `GET` | `/api/drivers/{id}` | `<DriverState>` |
 | `GET` | `/api/drivers/{id}/events?limit=100&type=drowsiness` | `[ <SignedEvent>, ... ]` newest-first |
 | `GET` | `/api/incidents?limit=50` | `[ <CrashCard>, ... ]` crash incident cards |
+| `GET` | `/api/dispatches` | `[ <DispatchRecord>, ... ]` confirmed crashes that fired dispatch |
 | `GET` | `/api/drivers/{id}/ledger/verify` | `<VerifyResult>` — powers the tamper demo |
 | `GET` | `/api/drivers/{id}/ledger?limit=200` | `[ <SignedEvent>, ... ]` raw chain for the log view |
 
 `CrashCard`:
 ```json
-{ "incident_id": "crash-s-abc-1", "driver_id": "d1", "severity": "moderate",
-  "status": "confirmed", "peak_g": 4.7, "reasons": ["accel_spike","rotation"],
-  "location": { "lat": 12.97, "lon": 77.59 },
-  "detected_at": 1721300000.0, "resolved_at": 1721300010.0 }
+{ "incident_id": "crash-s-abc-1", "driver_id": "d1", "severity": "severe",
+  "status": "confirmed", "peak_g": 7.5, "jerk": 320.0,
+  "signals_fired": ["accel_jerk","gyro","speed_drop"],
+  "location": { "lat": 12.97, "lon": 77.59 }, "window_seconds": 8.0,
+  "fatigue_context": { "was_elevated": true, "recent_max_score": 78.0,
+                       "elevated_seconds": 240.0, "sampled_over_minutes": 5.0 },
+  "detected_at": 1721300000.0, "resolved_at": 1721300008.0,
+  "reason": null, "final_motion": "stopped" }
 ```
+`DispatchRecord` (fired only on `confirmed`):
+```json
+{ "incident_id": "crash-s-abc-1", "driver_id": "d1", "severity": "severe",
+  "location": { "lat": 12.97, "lon": 77.59 }, "dispatched_at": 1721300008.0 }
+```
+Also pushed live on `/ws/fleet` as `{ "kind": "dispatch", "driver_id": "d1", "incident": <DispatchRecord> }`.
 
 `VerifyResult`:
 ```json

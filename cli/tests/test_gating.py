@@ -6,11 +6,11 @@ from ridewme.events import ALARM, AWAKE
 from ridewme.gating import ContextGate
 
 
-def test_gate_thresholds():
-    g = ContextGate(Tuning())
-    assert g.evaluate(0.0) == (True, "not_moving")     # parked -> gated
-    assert g.evaluate(10.0) == (False, None)           # moving -> not gated
-    assert g.evaluate(None) == (False, None)           # unknown speed -> fail-open
+def test_gate_maps_moving_flag():
+    # Seam 1: the gate takes a `moving` bool (fail-safe lives in MotionState).
+    g = ContextGate()
+    assert g.evaluate(True) == (False, None)            # moving -> not gated
+    assert g.evaluate(False) == (True, "not_moving")    # not moving -> gated
 
 
 def test_gated_alarm_is_silenced_but_still_reported():

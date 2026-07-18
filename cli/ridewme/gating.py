@@ -1,25 +1,19 @@
-"""L4 — Context gating.
+"""L4 — context gating (design §4, Seam 1).
 
-Even a real fatigue signal is suppressed unless context says it matters: the
-vehicle has to actually be moving (GPS speed, from the fusion side). Don't nag a
-parked driver. This is the seam where the camera pipeline and the sensor pipeline
-fuse into one system.
-
-Fail-open: if speed is unknown (no GPS fix), we do NOT gate — better to alert
-than to silently miss real drowsiness because a fix was missing.
+Even a real fatigue signal is suppressed unless the vehicle is actually moving.
+The decision "are we moving?" comes from the shared `VehicleMotion` state produced
+by the sensor worker (`MotionState.moving_for_gate`), which already applies the
+fail-safe: if speed is stale or GPS is unavailable, it returns `moving = True`, so
+we never suppress a real fatigue alert on missing data.
 """
 
 from __future__ import annotations
 
 
 class ContextGate:
-    def __init__(self, tuning):
+    def __init__(self, tuning=None):
         self.t = tuning
 
-    def evaluate(self, speed_mps: float | None) -> tuple[bool, str | None]:
+    def evaluate(self, moving: bool) -> tuple[bool, str | None]:
         """Return (gated, reason). gated=True suppresses escalation output."""
-        if speed_mps is None:
-            return (False, None)
-        if speed_mps < self.t.moving_mps:
-            return (True, "not_moving")
-        return (False, None)
+        return (False, None) if moving else (True, "not_moving")

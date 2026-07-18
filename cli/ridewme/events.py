@@ -27,11 +27,14 @@ ALARM = "alarm"
 LEVELS = (AWAKE, NOTICE, WARN, ALARM)
 LEVEL_RANK = {name: i for i, name in enumerate(LEVELS)}
 
-# Crash lifecycle statuses
-DETECTED = "detected"
-CONFIRMED = "confirmed"
-DISPATCHED = "dispatched"
-CANCELLED = "cancelled"
+# Crash lifecycle statuses (design §2 ladder). `candidate` is internal (never emitted).
+UNCONFIRMED = "unconfirmed"   # Layer 2 passed -> fleet only, window started
+CONFIRMED = "confirmed"       # Layer 3 window elapsed, consistent -> emergency services
+CANCELLED = "cancelled"       # driver cancel OR sustained normal driving
+
+# Crash cancel reasons
+REASON_DRIVER = "driver"
+REASON_DEESCALATED = "deescalated_motion"
 
 # Crash severity buckets
 MINOR = "minor"

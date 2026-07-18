@@ -17,7 +17,7 @@ from typing import Any
 import psycopg
 
 from .chain import verify_rows
-from .events import CRASH, DETECTED, HELLO
+from .events import CRASH, HELLO, UNCONFIRMED
 from .verify import verify_sig
 
 _SCHEMA = [
@@ -143,13 +143,19 @@ class Ledger:
             iid = p["incident_id"]
             card = cards.setdefault(iid, {
                 "incident_id": iid, "driver_id": ev["driver_id"],
-                "severity": p["severity"], "status": p["status"], "peak_g": p["peak_g"],
-                "reasons": p["reasons"], "location": p.get("location"),
+                "severity": p["severity"], "status": p["status"], "peak_g": p.get("peak_g"),
+                "jerk": p.get("jerk"), "signals_fired": p.get("signals_fired"),
+                "location": p.get("location"), "window_seconds": p.get("window_seconds"),
+                "fatigue_context": p.get("fatigue_context"),
                 "detected_at": p.get("ts_detected", ev["ts"]), "resolved_at": None,
             })
             card["status"] = p["status"]
             card["severity"] = p["severity"]
-            if p["status"] != DETECTED:
+            if p.get("reason"):
+                card["reason"] = p["reason"]
+            if p.get("final_motion"):
+                card["final_motion"] = p["final_motion"]
+            if p["status"] != UNCONFIRMED:
                 card["resolved_at"] = ev["ts"]
         return sorted(cards.values(), key=lambda c: c["detected_at"], reverse=True)[:limit]
 

@@ -31,8 +31,19 @@ Type `c`+Enter to cancel a pending crash dispatch.
 | L6 | `dutycycle.py` | drop inference fps when clearly alert |
 | L7 | `signing.py` | Ed25519 signed, chained events |
 
-Crash fusion: `fusion.py` (≥2-of-3 + cancel countdown). Orchestration: `daemon.py`.
+Orchestration: `daemon.py` (two parallel engines, one signed timeline).
 Input sources (phone / replay / synthetic): `sources.py`. Naive baseline: `naive.py`.
+
+## Crash engine (Feature 2)
+
+A second engine runs alongside the drowsiness one, sharing motion state (`motion.py` — Seam 1) and
+the same signed timeline, failing independently. Funnel: **pre-gate** (was it moving?) → **Layer 1**
+accel-spike candidate → **Layer 2** windowed corroboration (`crash.py`: peak + jerk, gyro ≥2 axes,
+GPS speed-drop; ≥2 agree) → `crash.unconfirmed` (fleet only) → **Layer 3** severity-modulated human
+window + post-event de-escalation + driver cancel → `crash.confirmed`. Emergency dispatch fires
+**only** on confirmed (never a pothole). Each crash carries `fatigue_context` (`fatigue.py`) — a
+crash after rising fatigue is a fatigue-caused crash (the 1+1=3 payoff). Ring buffer: `ringbuffer.py`.
+Demo inject: `x`+Enter. Live status → `FEATURE2_PROGRESS.md`.
 
 ## Resilience (offline-first)
 

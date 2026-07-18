@@ -73,6 +73,24 @@ class AudioEngine:
         elif transition and level == NOTICE:
             self._play_buf(*self._tone(440, 120, 0.22))
 
+    def crash_alarm(self, active: bool, intensity: float) -> None:
+        """Urgent repeating tone during the crash-confirmation window (design §2, L3).
+        An alert driver cancels easily; escalates with `intensity` (time-in-window)."""
+        if not active:
+            self._last_crash_t = 0.0
+            return
+        now = time.time()
+        if not self.enabled:
+            if now - getattr(self, "_last_crash_t", 0.0) >= 1.0:
+                self._last_crash_t = now
+                sys.stdout.write("\a")
+                sys.stdout.flush()
+            return
+        period = 1.2 - 0.7 * intensity
+        if now - getattr(self, "_last_crash_t", 0.0) >= period:
+            self._last_crash_t = now
+            self._play_buf(*self._tone(880 + 300 * intensity, 220, 0.5 + 0.4 * intensity))
+
     def stop(self) -> None:
         if self._play is not None:
             try:
