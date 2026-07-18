@@ -21,7 +21,7 @@ class StateStore:
             "driver_id": driver_id, "session_id": None, "level": "awake", "score": 0.0,
             "gated": False, "duty": "full", "fps": 0.0, "speed_mps": None,
             "calibrated": False, "last_event_ts": None, "last_seen": 0.0,
-            "active_incident": None,
+            "link": "online", "pending": 0, "active_incident": None,
         }
 
     def apply(self, ev: dict[str, Any], verified: bool = True) -> dict[str, Any]:
@@ -43,6 +43,8 @@ class StateStore:
             st["fps"] = p.get("fps", st["fps"])
             st["speed_mps"] = p.get("speed_mps", st["speed_mps"])
             st["calibrated"] = p.get("calibrated", st["calibrated"])
+            st["link"] = p.get("link", st["link"])
+            st["pending"] = p.get("pending", st["pending"])
         elif typ == CRASH:
             self._apply_crash(st, ev, p)
         return st

@@ -85,7 +85,10 @@ def create_app(cfg: Config | None = None) -> FastAPI:
                     "verified": ok, "event": ev,
                 })
                 try:
-                    await ws.send_text(json.dumps({"ack": ev.get("seq"), "verified": ok, "error": err}))
+                    await ws.send_text(json.dumps({
+                        "ack": ev.get("seq"), "session_id": ev.get("session_id"),
+                        "verified": ok, "error": err,
+                    }))
                 except Exception:
                     pass
         except WebSocketDisconnect:

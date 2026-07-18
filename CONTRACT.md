@@ -71,12 +71,16 @@ canonical_bytes(event) =
   "started_at": 1721300000.000, "schema": 1, "naive": false }
 ```
 
-**`heartbeat`** — liveness + the duty-cycle telemetry (powers the L6 demo graph).
+**`heartbeat`** — liveness + duty-cycle telemetry (L6 graph) + uplink health (edge resilience).
 ```json
 { "uptime_s": 42.5, "fps": 14.9, "target_fps": 15, "duty": "full",
-  "camera_ok": true, "sensors_ok": true, "calibrated": true, "speed_mps": 12.4 }
+  "camera_ok": true, "sensors_ok": true, "calibrated": true, "speed_mps": 12.4,
+  "link": "online", "pending": 0, "last_ack_age_s": 0.4 }
 ```
 `duty` ∈ `full | idle`. Emitted every `heartbeat_s` (default 5s).
+`link` ∈ `online | degraded | offline` — the daemon's view of its uplink: `degraded` = connected but
+draining a backlog after an outage; `offline` = buffering locally. `pending` = un-acked events still in
+the edge's durable outbox; `last_ack_age_s` = seconds since the last ack (null if never acked).
 
 **`drowsiness`** — a decision from L1–L5. Emitted on **level transitions** (always) and as a
 throttled **sample** (default 1 Hz) whenever `level != awake` or `score > 0`.
@@ -137,8 +141,12 @@ throttled **sample** (default 1 Hz) whenever `level != awake` or `score > 0`.
 - **WS `POST-upgrade /ws/ingest`** — the daemon dials in, optionally with `Authorization: Bearer
   <token>` (shared token in config; off by default for local dev).
 - Daemon sends `hello` first, then a stream of events (JSON text frames), one event per frame.
-- Backend replies with small acks: `{ "ack": <seq>, "verified": true }` or
-  `{ "ack": <seq>, "verified": false, "error": "..." }`. The daemon does not block on acks.
+- Backend replies with acks: `{ "ack": <seq>, "session_id": "s-abc", "verified": true }` (or
+  `verified:false` + `error`). The daemon does not block on acks.
+- **Delivery is at-least-once + durable.** The edge persists every event to a local outbox before
+  sending and deletes it only on ack; the backend dedups by `(session_id, seq)`. So a crash, dead
+  zone, or backend restart loses nothing — un-acked events replay on reconnect. Safety is unaffected
+  either way: the alarm fires on the edge, with no network involved.
 
 ---
 
@@ -161,6 +169,7 @@ On connect the server sends a **snapshot**, then pushes deltas. Message shapes:
 { "driver_id": "d1", "online": true, "session_id": "s-abc",
   "level": "warn", "score": 58.3, "gated": false,
   "duty": "full", "fps": 14.9, "speed_mps": 12.4, "calibrated": true,
+  "link": "online", "pending": 0,
   "last_event_ts": 1721300000.0, "updated_at": 1721300000.4,
   "active_incident": <CrashCard | null> }
 ```

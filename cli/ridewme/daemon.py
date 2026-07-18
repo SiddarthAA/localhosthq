@@ -23,6 +23,7 @@ from .escalation import Escalator
 from .fusion import CrashFusion, IncidentManager
 from .gating import ContextGate
 from .naive import NaiveDetector
+from .outbox import Outbox
 from .signals import SignalExtractor
 from .signing import EventChain, load_or_create_key
 from .trust import TrustEngine
@@ -41,7 +42,8 @@ class Daemon:
 
         key = load_or_create_key(cfg.key_path)
         self.chain = EventChain(key, cfg.driver_id, self.session_id)
-        self.uplink = Uplink(cfg)
+        self.outbox = Outbox(cfg.outbox_path)     # durable store-and-forward on the edge
+        self.uplink = Uplink(cfg, self.outbox)
 
         self.fsrc = feature_source
         self.ssrc = sensor_source
@@ -79,9 +81,11 @@ class Daemon:
             return self._speed
 
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
+        # Persist to the durable outbox under the same lock that advances the chain,
+        # so on-disk order matches seq order. The uplink drains it independently.
         with self._emit_lock:
             ev = self.chain.make(type_, payload, ts)
-        self.uplink.send(ev)
+            self.outbox.put(ev["session_id"], ev["seq"], E.to_wire(ev))
         return ev
 
     # ── lifecycle ─────────────────────────────────────────────────────
@@ -95,7 +99,8 @@ class Daemon:
         }
         with self._emit_lock:
             hello = self.chain.make(E.HELLO, hello_payload)
-        self.uplink.start(hello)   # sends hello on every (re)connect
+            self.outbox.put(hello["session_id"], hello["seq"], E.to_wire(hello))
+        self.uplink.start(hello)   # (re)registers the session's pubkey on every connect
 
         print(f"[daemon] session={self.session_id} driver={self.cfg.driver_id} "
               f"uplink={self.cfg.ingest_ws_url} naive={self.naive is not None}")
@@ -133,6 +138,10 @@ class Daemon:
         except Exception:
             pass
         self.uplink.close()
+        try:
+            self.outbox.close()
+        except Exception:
+            pass
         print("[daemon] stopped.")
 
     # ── camera loop: L0 -> L5 (+ L6) ──────────────────────────────────
@@ -271,6 +280,9 @@ class Daemon:
                 "sensors_ok": bool(self.ssrc.connected),
                 "calibrated": self.calib.ready,
                 "speed_mps": self._get_speed(),
+                "link": self.uplink.mode,                    # online | degraded | offline
+                "pending": self.uplink.pending(),            # un-acked backlog in the edge outbox
+                "last_ack_age_s": self.uplink.last_ack_age(),
             }
             self._emit(E.HEARTBEAT, payload, now)
             self._stop.wait(self.t.heartbeat_s)

@@ -96,6 +96,10 @@ class Tuning:
     heartbeat_s: float = 5.0
     sample_hz: float = 1.0                       # throttled drowsiness "sample" rate when active
 
+    # uplink resilience — link is "degraded" (catching up) when the durable outbox
+    # backlog exceeds this many un-acked events; "online" once drained.
+    link_degraded_pending: int = 10
+
 
 @dataclass
 class Config:
@@ -111,6 +115,7 @@ class Config:
     naive_mode: bool = False
     key_path: str = str(REPO_ROOT / "cli" / "keys" / "driver.key")
     model_path: str = str(REPO_ROOT / "cli" / "models" / "face_landmarker.task")
+    outbox_path: str = str(REPO_ROOT / "cli" / "outbox.db")   # durable edge store-and-forward
     tuning: Tuning = field(default_factory=Tuning)
 
     # ── derived URLs ──────────────────────────────────────────────────

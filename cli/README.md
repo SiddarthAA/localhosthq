@@ -34,6 +34,14 @@ Type `c`+Enter to cancel a pending crash dispatch.
 Crash fusion: `fusion.py` (≥2-of-3 + cancel countdown). Orchestration: `daemon.py`.
 Input sources (phone / replay / synthetic): `sources.py`. Naive baseline: `naive.py`.
 
+## Resilience (offline-first)
+
+Every signed event is written to a **durable local outbox** (`outbox.py`, SQLite/WAL) before it's
+sent, and deleted only when the backend acks it. A crash, a dead zone, or a backend restart loses
+nothing — un-acked events replay on reconnect (`uplink.py`, at-least-once; the backend dedups by
+`(session, seq)`). The heartbeat reports `link` (online / degraded / offline) + `pending` backlog so
+the dashboard shows sync status. **Safety never depends on the network** — the alarm fires on the edge.
+
 ## Tests
 
 ```bash

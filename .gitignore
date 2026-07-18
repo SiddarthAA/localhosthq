@@ -14,9 +14,10 @@ cli/keys/
 cli/models/
 *.key
 
-# Backend: SQLite ledger
+# Local SQLite files (edge outbox + any legacy ledger)
 *.db
 *.db-journal
 *.db-wal
+*.db-shm
 
 .DS_Store
