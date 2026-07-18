@@ -3,209 +3,226 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ridewme · engine X-ray</title>
+<title>RidewMe · engine x-ray</title>
 <style>
+  /* ── RidewMe design system (sensor-app/ui.css) ── */
   :root{
-    --bg:#08090b; --card:#0f1114; --card2:#0c0e11; --line:#1c2027; --line2:#262b34;
-    --txt:#e7e9ee; --muted:#8b93a1; --faint:#5b6472;
-    --awake:#34d399; --notice:#38bdf8; --warn:#fbbf24; --alarm:#f43f5e;
-    --ax:#f43f5e; --ay:#34d399; --az:#38bdf8;
+    --background:220 16% 4%; --foreground:0 0% 96%; --card:210 16% 7%;
+    --border:195 24% 20%; --muted:210 10% 58%;
+    --primary:186 100% 52%; --primary-foreground:200 100% 6%;
+    --success:152 68% 45%; --destructive:0 82% 62%; --ring:186 100% 52%; --radius:3px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--txt);
-       font:14px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Inter,Roboto,sans-serif;
-       -webkit-font-smoothing:antialiased}
-  .top{display:flex;align-items:center;gap:14px;padding:14px 22px;border-bottom:1px solid var(--line)}
-  .brand{font-weight:650;letter-spacing:.2px}
-  .brand small{color:var(--faint);font-weight:500;margin-left:8px}
-  .pill{display:inline-flex;align-items:center;gap:7px;padding:5px 11px;border:1px solid var(--line2);
-        border-radius:999px;color:var(--muted);font-size:12px}
-  .dot{width:8px;height:8px;border-radius:50%;background:#3a3f48}
-  .dot.on{background:var(--awake);box-shadow:0 0 10px var(--awake)}
+  body{margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;position:relative;
+       font-family:ui-sans-serif,-apple-system,system-ui,"Segoe UI",Roboto,sans-serif;
+       background:hsl(var(--background));color:hsl(var(--foreground));-webkit-font-smoothing:antialiased}
+  body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+    background:
+      radial-gradient(820px 440px at 50% -10%, hsl(var(--primary)/.09), transparent 62%),
+      linear-gradient(hsl(var(--foreground)/.02) 1px, transparent 1px),
+      linear-gradient(90deg, hsl(var(--foreground)/.02) 1px, transparent 1px);
+    background-size:100% 100%,40px 40px,40px 40px}
+  .mono{font-variant-numeric:tabular-nums;font-family:ui-monospace,"SF Mono",Menlo,monospace;letter-spacing:.5px}
+
+  .card{position:relative;background:hsl(var(--card)/.5);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);
+        border:1px solid hsl(var(--border));border-radius:var(--radius)}
+  .hud::before,.hud::after{content:"";position:absolute;width:11px;height:11px;pointer-events:none;z-index:2;border:0 solid hsl(var(--primary)/.85)}
+  .hud::before{top:-1px;left:-1px;border-top-width:1px;border-left-width:1px}
+  .hud::after{bottom:-1px;right:-1px;border-bottom-width:1px;border-right-width:1px}
+
+  .badge{display:inline-flex;align-items:center;gap:7px;height:22px;padding:0 9px;border-radius:2px;
+    border:1px solid hsl(var(--border));background:hsl(var(--foreground)/.02);
+    font-size:10px;font-weight:600;letter-spacing:1.5px;color:hsl(var(--muted));text-transform:uppercase}
+  .badge-live{color:hsl(var(--success));border-color:hsl(var(--success)/.5);background:hsl(var(--success)/.08)}
+  .dot{width:6px;height:6px;border-radius:50%;background:hsl(var(--muted)/.5);flex:none}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  .badge-live .dot{background:hsl(var(--success));box-shadow:0 0 7px hsl(var(--success));animation:pulse 1.4s ease-in-out infinite}
+  .k{font-size:9.5px;text-transform:uppercase;letter-spacing:2px;color:hsl(var(--muted));font-weight:600}
+  .btn{display:inline-flex;align-items:center;gap:8px;height:32px;padding:0 13px;border:1px solid hsl(var(--border));
+    border-radius:var(--radius);background:transparent;color:hsl(var(--foreground));cursor:pointer;
+    font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;transition:border-color .15s,color .15s}
+  .btn:hover:not(:disabled){border-color:hsl(var(--primary)/.6);color:hsl(var(--primary))}
+  .btn:disabled{color:hsl(var(--success));border-color:hsl(var(--success)/.5);cursor:default}
+
+  /* ── layout: one screen, no scroll ── */
+  header{position:relative;z-index:1;display:flex;align-items:center;gap:14px;
+    height:54px;padding:0 20px;border-bottom:1px solid hsl(var(--border));flex:none}
+  .brand{font-size:15px;font-weight:600;letter-spacing:.3px}
+  .brand b{color:hsl(var(--primary));text-shadow:0 0 12px hsl(var(--primary)/.6)}
+  .brand .eb{color:hsl(var(--muted));font-weight:500;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;margin-left:10px}
   .spacer{flex:1}
-  button{background:var(--card);color:var(--txt);border:1px solid var(--line2);border-radius:9px;
-         padding:7px 13px;cursor:pointer;font-size:12.5px;transition:border-color .15s}
-  button:hover:not(:disabled){border-color:#3a4250}
-  button:disabled{color:var(--faint);cursor:default}
+  .statuscluster{display:flex;align-items:center;gap:10px}
 
-  main{max-width:1360px;margin:0 auto;padding:20px;display:grid;gap:16px;
-       grid-template-columns:1.55fr 1fr;grid-template-rows:1.35fr 1fr;
-       grid-template-areas:"video accel" "metrics gyro";min-height:calc(100vh - 120px)}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;
-        display:flex;flex-direction:column;min-height:0}
-  .card > .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-  .hd .lbl{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600}
-  .hd .rt{font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
+  main{position:relative;z-index:1;flex:1;min-height:0;padding:14px;display:grid;grid-template-columns:1.55fr 1fr;gap:14px}
+  .col{display:flex;flex-direction:column;gap:14px;min-height:0}
+  .colL .video{flex:1.8} .colL .scores{flex:1}
+  .colR .card:first-child{flex:1} .colR .card:last-child{flex:1.12}
+  .card.pad{display:flex;flex-direction:column;overflow:hidden;padding:12px 13px;min-height:0}
+  .chd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex:none}
 
-  #videocard{grid-area:video;position:relative;padding:0;overflow:hidden}
-  #videocard .hd{position:absolute;top:0;left:0;right:0;z-index:2;padding:14px 16px;margin:0;
-     background:linear-gradient(180deg,rgba(0,0,0,.55),rgba(0,0,0,0))}
-  #videocard .hd .lbl{color:#cfd6e0}
-  #vid{width:100%;height:100%;object-fit:cover;display:block;background:#000}
-  .vbadge{position:absolute;left:16px;bottom:16px;z-index:2;display:flex;align-items:center;gap:10px}
-  .vbadge .lv{padding:5px 12px;border-radius:999px;font-weight:700;font-size:13px;letter-spacing:.4px}
-  .vbadge .sc{font-size:13px;color:#cfd6e0;background:rgba(0,0,0,.45);border:1px solid var(--line2);
-     padding:5px 10px;border-radius:999px;font-variant-numeric:tabular-nums}
-  .rec{position:absolute;right:16px;top:16px;z-index:2;font-size:11px;color:#cfd6e0;display:flex;gap:6px;align-items:center}
-  .rec i{width:8px;height:8px;border-radius:50%;background:var(--alarm);animation:blink 1.4s infinite}
-  @keyframes blink{50%{opacity:.25}}
+  .video .vbody{position:relative;flex:1;min-height:0;border-radius:2px;overflow:hidden;background:#000}
+  #vid{width:100%;height:100%;object-fit:cover;display:block}
+  .voverlay{position:absolute;left:11px;bottom:11px;display:flex;align-items:center;gap:8px;z-index:2}
+  .vscore{font-size:14px;padding:3px 9px;border-radius:2px;background:hsl(var(--background)/.55);border:1px solid hsl(var(--border))}
+  .capbadge{position:absolute;left:11px;top:11px;z-index:2}
 
-  #metrics{grid-area:metrics}
-  .score{display:flex;align-items:baseline;gap:14px}
-  .score .n{font-size:44px;font-weight:730;line-height:1;font-variant-numeric:tabular-nums}
-  .score .lv{padding:3px 12px;border-radius:999px;font-weight:700;font-size:12.5px}
-  .track{height:8px;border-radius:6px;background:#0a0c0f;margin-top:12px;overflow:hidden;position:relative}
-  .track>i{display:block;height:100%;border-radius:6px;transition:width .15s,background .15s}
-  .bars{display:grid;gap:8px;margin-top:16px}
-  .bar{display:grid;grid-template-columns:74px 1fr 54px;align-items:center;gap:10px;font-size:12px}
-  .bar .l{color:var(--muted)}
-  .bar .t{height:7px;border-radius:5px;background:#0a0c0f;overflow:hidden}
-  .bar .t>i{display:block;height:100%;background:#3f4756;border-radius:5px;transition:width .15s,background .15s}
-  .bar .v{text-align:right;color:var(--txt);font-variant-numeric:tabular-nums}
-  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
-  .chip{font-size:11px;padding:3px 10px;border-radius:999px;border:1px solid var(--line2);color:var(--faint)}
-  .chip.on{color:#070b10;font-weight:700}
-  .foot{display:flex;gap:18px;color:var(--muted);font-size:12px;margin-top:auto;padding-top:14px;flex-wrap:wrap}
-  .foot b{color:var(--txt);font-weight:600}
+  .scores .sbody{flex:1;min-height:0;display:grid;grid-template-columns:130px 1fr;gap:14px;align-items:stretch}
+  .sleft{display:flex;flex-direction:column}
+  .bignum{font-size:46px;font-weight:500;line-height:1;margin-top:2px;color:hsl(var(--success))}
+  .substats{display:flex;gap:16px;margin-top:auto}
+  .substats .s .v{font-size:13px;margin-top:3px;color:hsl(var(--foreground))}
+  .chips{display:flex;flex-wrap:wrap;gap:5px;margin-top:12px}
+  .chip{font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 7px;border-radius:2px;border:1px solid hsl(var(--border));color:hsl(var(--muted));font-weight:600}
+  .sright{min-height:0;position:relative}
 
-  #accelcard{grid-area:accel} #gyrocard{grid-area:gyro}
-  .sensor .big{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
-  .sensor .unit{font-size:12px;color:var(--faint);margin-left:6px;font-weight:500}
-  .chartwrap{flex:1;min-height:70px;margin-top:8px}
-  canvas{width:100%;height:100%;display:block}
-  .axes{display:flex;gap:16px;margin-top:8px;font-size:12px;font-variant-numeric:tabular-nums}
-  .axes span{color:var(--muted)} .axes b{color:var(--txt);font-weight:600}
-  .k{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle}
+  .cbody{flex:1;min-height:0} .cbody canvas,.sright canvas{width:100%;height:100%;display:block}
+  .legend{display:flex;gap:12px;align-items:center}
+  .legend span{font-size:9px;letter-spacing:1px;color:hsl(var(--muted));text-transform:uppercase}
+  .legend i{display:inline-block;width:11px;height:2px;margin-right:5px;vertical-align:middle}
+  .axrow{display:flex;gap:18px;margin-top:9px;flex:none;font-size:12px}
+  .axrow .a{color:hsl(var(--muted))} .axrow .a b{color:hsl(var(--foreground));font-weight:500}
 
-  .crash{position:fixed;left:0;right:0;top:0;z-index:20;background:linear-gradient(90deg,#2a0b12,#3a0d16);
-     border-bottom:1px solid var(--alarm);display:none;align-items:center;gap:22px;padding:12px 24px}
-  .crash.show{display:flex}
-  .crash .b{font-weight:800;color:var(--alarm);letter-spacing:.4px}
-  .crash .cd{font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+  .crashbar{position:fixed;top:0;left:0;right:0;z-index:30;display:none;align-items:center;gap:18px;
+    padding:11px 22px;background:hsl(var(--destructive)/.13);border-bottom:1px solid hsl(var(--destructive)/.6);
+    box-shadow:0 0 34px hsl(var(--destructive)/.25)}
+  .crashbar.show{display:flex}
+  .crashbar .t{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;font-weight:700;color:hsl(var(--destructive))}
+  .crashbar .cd{font-size:22px;color:hsl(var(--foreground))}
+  .crashbar .m{color:hsl(var(--muted));font-size:11px;letter-spacing:1px;text-transform:uppercase}
 </style>
 </head>
 <body>
-<div class="crash" id="crash"><span class="b">⚠ IMPACT DETECTED</span><span>dispatch in <span class="cd" id="crash_cd">—</span>s</span><span id="crash_meta" style="color:var(--muted)"></span></div>
-
-<div class="top">
-  <span class="brand">ridewme<small>engine X-ray</small></span>
-  <span class="pill" id="drv">driver</span>
-  <span class="spacer"></span>
-  <span class="pill"><span class="dot" id="dot"></span><span id="linktxt">connecting</span></span>
-  <button id="sound">🔊 enable sound</button>
+<div class="crashbar" id="crash">
+  <span class="t">⚠ Impact detected</span><span class="m">dispatch in</span>
+  <span class="cd mono" id="crash_cd">—</span><span class="m" id="crash_meta"></span>
 </div>
 
+<header>
+  <div class="brand">Ride<b>w</b>Me<span class="eb">engine x-ray</span></div>
+  <div class="spacer"></div>
+  <div class="statuscluster">
+    <span class="k" id="phase">initializing</span>
+    <span class="badge" id="drv">driver</span>
+    <span class="badge badge-live" id="live"><i class="dot"></i><span id="livetxt">live</span></span>
+    <button class="btn" id="sound">◨ sound</button>
+  </div>
+</header>
+
 <main>
-  <section class="card" id="videocard">
-    <div class="hd"><span class="lbl">MediaPipe · processed feed</span></div>
-    <div class="rec"><i></i> LIVE</div>
-    <img id="vid" src="/stream.mjpeg" alt="feed"/>
-    <div class="vbadge"><span class="lv" id="vlevel">AWAKE</span><span class="sc" id="vscore">score 0</span></div>
-  </section>
+  <div class="col colL">
+    <section class="card hud pad video">
+      <div class="chd"><span class="k">Raw video · mediapipe</span><span class="badge badge-live"><i class="dot"></i>feed</span></div>
+      <div class="vbody">
+        <img id="vid" src="/stream.mjpeg" alt="feed"/>
+        <span class="badge capbadge" id="capbadge" style="display:none">capturing face</span>
+        <div class="voverlay"><span class="badge" id="vlevel">awake</span><span class="vscore mono" id="vscore">0</span></div>
+      </div>
+    </section>
 
-  <section class="card" id="metrics">
-    <div class="hd"><span class="lbl">Metrics &amp; scores</span><span class="rt" id="calib"></span></div>
-    <div class="score"><span class="n" id="score">0</span><span class="lv" id="level">AWAKE</span></div>
-    <div class="track"><i id="scorebar"></i></div>
-    <div class="bars">
-      <div class="bar"><span class="l">PERCLOS</span><div class="t"><i id="b_perclos"></i></div><span class="v" id="v_perclos">—</span></div>
-      <div class="bar"><span class="l">EAR</span><div class="t"><i id="b_ear"></i></div><span class="v" id="v_ear">—</span></div>
-      <div class="bar"><span class="l">blink dur</span><div class="t"><i id="b_blink"></i></div><span class="v" id="v_blink">—</span></div>
-      <div class="bar"><span class="l">head nod</span><div class="t"><i id="b_head"></i></div><span class="v" id="v_head">—</span></div>
-      <div class="bar"><span class="l">yawn</span><div class="t"><i id="b_yawn"></i></div><span class="v" id="v_yawn">—</span></div>
-    </div>
-    <div class="chips" id="chips"></div>
-    <div class="foot"><span>agree <b id="agree">0</b></span><span><b id="fps">—</b> fps</span><span id="duty">full</span><span><b id="speed">—</b> m/s</span></div>
-  </section>
+    <section class="card pad scores">
+      <div class="chd"><span class="k">Scores</span><span class="badge" id="level">awake</span></div>
+      <div class="sbody">
+        <div class="sleft">
+          <div class="k">Fatigue score</div>
+          <div class="bignum mono" id="score">0</div>
+          <div class="chips" id="chips"></div>
+          <div class="substats">
+            <div class="s"><div class="k">Perclos</div><div class="v mono" id="v_perclos">—</div></div>
+            <div class="s"><div class="k">Ear</div><div class="v mono" id="v_ear">—</div></div>
+            <div class="s"><div class="k">Agree</div><div class="v mono" id="v_agree">0</div></div>
+          </div>
+        </div>
+        <div class="sright"><canvas id="c_score"></canvas></div>
+      </div>
+    </section>
+  </div>
 
-  <section class="card sensor" id="accelcard">
-    <div class="hd"><span class="lbl">Accelerometer</span><span class="rt">m/s²</span></div>
-    <div><span class="big" id="a_mag">0.0</span><span class="unit">|a|</span></div>
-    <div class="chartwrap"><canvas id="c_accel"></canvas></div>
-    <div class="axes"><span><i class="k" style="background:var(--ax)"></i>x <b id="ax">0</b></span><span><i class="k" style="background:var(--ay)"></i>y <b id="ay">0</b></span><span><i class="k" style="background:var(--az)"></i>z <b id="az">0</b></span></div>
-  </section>
+  <div class="col colR">
+    <section class="card hud pad">
+      <div class="chd"><span class="k">Accelerometer</span>
+        <span class="legend"><span><i style="background:#22d3ee"></i>x</span><span><i style="background:#a78bfa"></i>y</span><span><i style="background:#f472b6"></i>z</span></span>
+      </div>
+      <div class="cbody"><canvas id="c_accel"></canvas></div>
+      <div class="axrow"><span class="a">x <b class="mono" id="ax">0</b></span><span class="a">y <b class="mono" id="ay">0</b></span><span class="a">z <b class="mono" id="az">0</b></span><span class="a" style="margin-left:auto">|a| <b class="mono" id="amag">0</b> m/s²</span></div>
+    </section>
 
-  <section class="card sensor" id="gyrocard">
-    <div class="hd"><span class="lbl">Gyroscope</span><span class="rt">°/s</span></div>
-    <div><span class="big" id="g_mag">0.0</span><span class="unit">|ω|</span></div>
-    <div class="chartwrap"><canvas id="c_gyro"></canvas></div>
-    <div class="axes"><span><i class="k" style="background:var(--ax)"></i>α <b id="ga">0</b></span><span><i class="k" style="background:var(--ay)"></i>β <b id="gb">0</b></span><span><i class="k" style="background:var(--az)"></i>γ <b id="gg">0</b></span></div>
-  </section>
+    <section class="card hud pad">
+      <div class="chd"><span class="k">Gyroscope</span>
+        <span class="legend"><span><i style="background:#22d3ee"></i>α</span><span><i style="background:#a78bfa"></i>β</span><span><i style="background:#f472b6"></i>γ</span></span>
+      </div>
+      <div class="cbody"><canvas id="c_gyro"></canvas></div>
+      <div class="axrow"><span class="a">α <b class="mono" id="ga">0</b></span><span class="a">β <b class="mono" id="gb">0</b></span><span class="a">γ <b class="mono" id="gg">0</b></span><span class="a" style="margin-left:auto">|ω| <b class="mono" id="gmag">0</b> °/s</span></div>
+    </section>
+  </div>
 </main>
 
 <script>
-const COL={awake:'#34d399',notice:'#38bdf8',warn:'#fbbf24',alarm:'#f43f5e'};
-const $=id=>document.getElementById(id), clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
-const AXC='#f43f5e', AYC='#34d399', AZC='#38bdf8';   // resolved axis colors for canvas
-const N=160;
-const accel={x:[],y:[],z:[]}, gyro={a:[],b:[],g:[]};
-function push(a,v){a.push(v); if(a.length>N)a.shift();}
+const $=id=>document.getElementById(id), dpr=Math.max(1,window.devicePixelRatio||1);
+const LVHEX={awake:'#2fd47f',notice:'#22d3ee',warn:'#f5a623',alarm:'#ef4444'};
 
-// centered multi-line chart (0 in the middle, ±range)
-function drawC(cv, series, range){
-  const dpr=devicePixelRatio||1, w=cv.clientWidth, h=cv.clientHeight;
-  cv.width=w*dpr; cv.height=h*dpr; const ctx=cv.getContext('2d'); ctx.scale(dpr,dpr);
-  ctx.clearRect(0,0,w,h);
-  ctx.strokeStyle='#171b22'; ctx.lineWidth=1;
-  ctx.beginPath(); ctx.moveTo(0,h/2); ctx.lineTo(w,h/2); ctx.stroke();
-  series.forEach(s=>{ if(!s.data.length)return;
-    ctx.strokeStyle=s.color; ctx.lineWidth=1.8; ctx.beginPath();
-    s.data.forEach((v,i)=>{const x=w*i/(N-1), y=h/2 - clamp(v/range,-1,1)*(h/2-3); i?ctx.lineTo(x,y):ctx.moveTo(x,y);});
-    ctx.stroke(); });
+// ── canvas Strip chart (RidewMe design-doc §8) ──
+class Strip{
+  constructor(canvas,colors){this.canvas=canvas;this.ctx=canvas.getContext('2d');this.colors=colors;this.N=200;this.data=colors.map(()=>[]);}
+  resize(){const c=this.canvas,w=Math.floor(c.clientWidth*dpr),h=Math.floor(c.clientHeight*dpr);if(w!==c.width||h!==c.height){c.width=Math.max(1,w);c.height=Math.max(1,h);}}
+  push(v){for(let i=0;i<this.colors.length;i++){const a=this.data[i];a.push((typeof v[i]==='number'&&isFinite(v[i]))?v[i]:0);if(a.length>this.N)a.shift();}}
+  draw(){this.resize();const {ctx,canvas:c}=this,W=c.width,H=c.height;ctx.clearRect(0,0,W,H);
+    let mn=Infinity,mx=-Infinity;for(const a of this.data)for(const v of a){if(v<mn)mn=v;if(v>mx)mx=v;}
+    if(!isFinite(mn)){mn=-1;mx=1;} if(mn===mx){mn-=1;mx+=1;} const pad=(mx-mn)*0.15;mn-=pad;mx+=pad;
+    const yOf=v=>H-((v-mn)/(mx-mn))*H;
+    ctx.shadowBlur=0;
+    if(mn<0&&mx>0){ctx.strokeStyle='rgba(255,255,255,0.06)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,yOf(0));ctx.lineTo(W,yOf(0));ctx.stroke();}
+    const step=W/(this.N-1);
+    for(let i=0;i<this.colors.length;i++){const a=this.data[i];if(a.length<2)continue;const off=W-(a.length-1)*step;
+      ctx.strokeStyle=this.colors[i];ctx.lineWidth=1.25*dpr;ctx.lineJoin='round';ctx.shadowColor=this.colors[i];ctx.shadowBlur=5*dpr;
+      ctx.beginPath();for(let j=0;j<a.length;j++){const x=off+j*step,y=yOf(a[j]);j?ctx.lineTo(x,y):ctx.moveTo(x,y);}ctx.stroke();}
+  }
 }
+const cAccel=new Strip($('c_accel'),['#22d3ee','#a78bfa','#f472b6']);
+const cGyro=new Strip($('c_gyro'),['#22d3ee','#a78bfa','#f472b6']);
+const cScore=new Strip($('c_score'),['#22d3ee','#a78bfa']);
+(function loop(){cAccel.draw();cGyro.draw();cScore.draw();requestAnimationFrame(loop);})();
 
-// sound
+// ── sound ──
 let actx=null,last='awake',timer=null;
-$('sound').onclick=()=>{actx=new(window.AudioContext||window.webkitAudioContext)();$('sound').textContent='🔊 sound on';$('sound').disabled=true;};
+$('sound').onclick=()=>{actx=new(window.AudioContext||window.webkitAudioContext)();$('sound').textContent='◨ sound on';$('sound').disabled=true;};
 function beep(f,d,v){if(!actx)return;const o=actx.createOscillator(),g=actx.createGain();o.type='sine';o.frequency.value=f;g.gain.value=v;o.connect(g);g.connect(actx.destination);o.start();g.gain.exponentialRampToValueAtTime(1e-4,actx.currentTime+d);o.stop(actx.currentTime+d);}
 function snd(l){if(l===last)return;last=l;if(timer){clearInterval(timer);timer=null;}
-  if(l==='notice')beep(440,.18,.08);else if(l==='warn')beep(600,.28,.13);
-  else if(l==='alarm'){beep(900,.4,.2);timer=setInterval(()=>beep(900,.35,.2),700);}}
+  if(l==='notice')beep(440,.18,.08);else if(l==='warn')beep(600,.28,.13);else if(l==='alarm'){beep(900,.4,.2);timer=setInterval(()=>beep(900,.35,.2),700);}}
+const mag=(o,k)=>o?Math.hypot(o[k[0]]||0,o[k[1]]||0,o[k[2]]||0):0;
 
-function mag(o,k){return o?Math.hypot(o[k[0]]||0,o[k[1]]||0,o[k[2]]||0):0;}
+function setBadge(el,lvl,text){const c=LVHEX[lvl];el.textContent=text;el.style.color=c;el.style.borderColor=c+'80';el.style.background=c+'14';}
 
 function update(m){
-  const lvl=m.level||'awake',c=COL[lvl];
+  const lvl=m.level||'awake',c=LVHEX[lvl];
   $('drv').textContent=m.driver||'driver';
+  $('phase').textContent=m.calibrated?'tracking active':(m.uptime_s!=null&&m.uptime_s<3?'initializing':'calibrating '+Math.round((m.calib_progress||0)*100)+'%');
   $('score').textContent=Math.round(m.score||0); $('score').style.color=c;
-  $('vscore').textContent='score '+Math.round(m.score||0);
-  [['level',lvl.toUpperCase()],['vlevel',lvl.toUpperCase()]].forEach(([id,t])=>{const e=$(id);e.textContent=t;e.style.background=c;e.style.color='#07110d';});
-  $('scorebar').style.width=clamp((m.score||0)/100,0,1)*100+'%'; $('scorebar').style.background=c;
-  const s=m.signals||{}, bar=(b,vv,frac,val)=>{const e=$(b);e.style.width=clamp(frac,0,1)*100+'%';e.style.background=frac>0.5?c:'#3f4756';$(vv).textContent=val;};
-  bar('b_perclos','v_perclos',s.perclos||0,s.perclos!=null?s.perclos.toFixed(2):'—');
-  bar('b_ear','v_ear',s.ear!=null?clamp((0.30-s.ear)/0.20,0,1):0,s.ear!=null?s.ear.toFixed(2):'—');
-  bar('b_blink','v_blink',clamp(((s.blink_dur_ms||0)-150)/450,0,1),s.blink_dur_ms!=null?Math.round(s.blink_dur_ms)+'ms':'—');
-  bar('b_head','v_head',s.head_nod||0,s.head_nod!=null?s.head_nod.toFixed(2):'—');
-  bar('b_yawn','v_yawn',s.yawn||0,s.yawn!=null?s.yawn.toFixed(2):'—');
+  $('vscore').textContent=Math.round(m.score||0);
+  setBadge($('level'),lvl,lvl); setBadge($('vlevel'),lvl,lvl);
+  $('capbadge').style.display=m.show_mesh?'inline-flex':'none';
+  const s=m.signals||{};
+  $('v_perclos').textContent=s.perclos!=null?s.perclos.toFixed(2):'—';
+  $('v_ear').textContent=s.ear!=null?s.ear.toFixed(2):'—';
+  $('v_agree').textContent=m.agree_count||0;
   const fired=m.fired||[];
-  $('chips').innerHTML=['perclos','blink','head_nod','yawn'].map(k=>{const on=fired.includes(k);return `<span class="chip${on?' on':''}" style="${on?`background:${c};border-color:${c}`:''}">${k}</span>`;}).join('');
-  $('agree').textContent=m.agree_count||0; $('fps').textContent=(m.fps||0).toFixed(0);
-  $('duty').textContent=m.duty||'full'; $('speed').textContent=m.speed_mps!=null?m.speed_mps.toFixed(0):'—';
-  $('calib').textContent=m.calibrated?'tracking active':('calibrating '+Math.round((m.calib_progress||0)*100)+'%');
-  $('dot').className='dot on'; $('linktxt').textContent=m.link||'online';
+  $('chips').innerHTML=['perclos','blink','head_nod','yawn'].map(k=>{const on=fired.includes(k);return `<span class="chip" style="${on?`color:${c};border-color:${c}80;background:${c}14`:''}">${k}</span>`;}).join('');
+  const lb=$('live'); if(m.link==='online'){lb.classList.add('badge-live');$('livetxt').textContent='live';}else{lb.classList.remove('badge-live');$('livetxt').textContent=m.link||'offline';}
 
-  // accelerometer
   const a=m.accel;
-  if(a){push(accel.x,a.x||0);push(accel.y,a.y||0);push(accel.z,a.z||0);
-    $('ax').textContent=(a.x||0).toFixed(1);$('ay').textContent=(a.y||0).toFixed(1);$('az').textContent=(a.z||0).toFixed(1);
-    $('a_mag').textContent=mag(a,['x','y','z']).toFixed(1);}
-  drawC($('c_accel'),[{data:accel.x,color:AXC},{data:accel.y,color:AYC},{data:accel.z,color:AZC}],20);
-  // gyroscope
+  if(a){cAccel.push([a.x||0,a.y||0,a.z||0]);$('ax').textContent=(a.x||0).toFixed(1);$('ay').textContent=(a.y||0).toFixed(1);$('az').textContent=(a.z||0).toFixed(1);$('amag').textContent=mag(a,['x','y','z']).toFixed(1);}
   const g=m.gyro;
-  if(g){push(gyro.a,g.alpha||0);push(gyro.b,g.beta||0);push(gyro.g,g.gamma||0);
-    $('ga').textContent=(g.alpha||0).toFixed(0);$('gb').textContent=(g.beta||0).toFixed(0);$('gg').textContent=(g.gamma||0).toFixed(0);
-    $('g_mag').textContent=mag(g,['alpha','beta','gamma']).toFixed(0);}
-  drawC($('c_gyro'),[{data:gyro.a,color:AXC},{data:gyro.b,color:AYC},{data:gyro.g,color:AZC}],300);
+  if(g){cGyro.push([g.alpha||0,g.beta||0,g.gamma||0]);$('ga').textContent=(g.alpha||0).toFixed(0);$('gb').textContent=(g.beta||0).toFixed(0);$('gg').textContent=(g.gamma||0).toFixed(0);$('gmag').textContent=mag(g,['alpha','beta','gamma']).toFixed(0);}
+  cScore.push([m.score||0,(s.perclos||0)*100]);
 
   const cr=m.crash;
-  if(cr&&cr.status==='unconfirmed'){$('crash').classList.add('show');$('crash_cd').textContent=Math.max(0,cr.countdown_s||0).toFixed(0);$('crash_meta').textContent=(cr.severity||'').toUpperCase()+' · '+(cr.peak_g||0)+'g';}
+  if(cr&&cr.status==='unconfirmed'){$('crash').classList.add('show');$('crash_cd').textContent=Math.max(0,cr.countdown_s||0).toFixed(0)+'s';$('crash_meta').textContent=(cr.severity||'')+' · '+(cr.peak_g||0)+'g';}
   else $('crash').classList.remove('show');
   snd(lvl);
 }
 const es=new EventSource('/events');
 es.onmessage=e=>{try{update(JSON.parse(e.data));}catch(_){}};
-es.onerror=()=>{$('dot').className='dot';$('linktxt').textContent='offline';};
+es.onerror=()=>{$('live').classList.remove('badge-live');$('livetxt').textContent='offline';};
 </script>
 </body>
 </html>

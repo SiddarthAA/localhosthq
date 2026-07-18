@@ -171,7 +171,7 @@ class Daemon:
             "fired": trust.fired, "agree_count": trust.agree_count,
             "fps": _r(self._fps, 1), "duty": self._duty_state,
             "speed_mps": self.motion.get().speed_mps, "link": self.uplink.mode, "crash": crash,
-            "driver": self.cfg.driver_name,
+            "driver": self.cfg.driver_name, "uptime_s": time.time() - self._start_t,
             "show_mesh": not baseline.ready,       # mesh only while capturing/calibrating the face
             "accel": self._last_sensor.get("accel") or self._last_sensor.get("accelG"),  # linear (~0-centered)
             "gyro": self._last_sensor.get("gyro"),

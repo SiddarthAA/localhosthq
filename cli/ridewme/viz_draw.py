@@ -8,12 +8,12 @@ emphasized in the current drowsiness-level color.
 
 from __future__ import annotations
 
-# BGR colors per drowsiness level
+# BGR colors per drowsiness level (aligned to the RidewMe palette: green/cyan/amber/red)
 LEVEL_BGR = {
-    "awake":  (90, 210, 90),
-    "notice": (210, 200, 60),
-    "warn":   (0, 180, 255),
-    "alarm":  (0, 60, 255),
+    "awake":  (95, 205, 70),    # success green
+    "notice": (238, 211, 34),   # cyan #22d3ee
+    "warn":   (35, 166, 245),   # amber
+    "alarm":  (68, 68, 239),    # destructive red
 }
 
 # landmark indices to emphasize (EAR eye points + mouth)
@@ -56,8 +56,7 @@ def annotate(frame, lms, m):
                 if 0 <= x < w and 0 <= y < h:
                     cv2.circle(img, (x, y), 2, col, -1, cv2.LINE_AA)
 
-    cv2.rectangle(img, (3, 3), (w - 4, h - 4), col, 6)       # level border
-    _hud(cv2, img, m, col)
+    cv2.rectangle(img, (2, 2), (w - 3, h - 3), col, 4)       # level border (text HUD is CSS)
     return img
 
 
