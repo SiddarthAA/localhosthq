@@ -1,46 +1,37 @@
 .cta {
   position: relative;
-  background: var(--ink-3);
+  background: var(--bg);
   overflow: hidden;
   padding-bottom: 0;
   text-align: center;
+}
+.cta__ether {
+  opacity: 0.8;
 }
 
 .cta__ghost {
   position: absolute;
   left: 50%;
-  top: 8%;
+  top: 6%;
   translate: -50% 0;
-  font-size: clamp(5rem, 21vw, 24rem);
+  font-size: clamp(5rem, 22vw, 25rem);
   font-variation-settings: 'wdth' var(--wdth-display);
   font-weight: 500;
   letter-spacing: -0.05em;
   line-height: 1;
   color: var(--cream);
-  opacity: 0.035;
+  opacity: 0.03;
   white-space: nowrap;
   pointer-events: none;
   user-select: none;
 }
-.cta__glow {
-  position: absolute;
-  left: 50%;
-  top: 46%;
-  translate: -50% -50%;
-  width: 70vw;
-  height: 55vh;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(127, 176, 163, 0.14), transparent 62%);
-  pointer-events: none;
-}
-/* thin animated horizon echoing the hero road */
 .cta__horizon {
   position: absolute;
   left: 0;
   right: 0;
   bottom: clamp(6rem, 14vh, 11rem);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(127, 176, 163, 0.5), transparent);
+  background: linear-gradient(90deg, transparent, rgba(111, 224, 196, 0.55), transparent);
   pointer-events: none;
 }
 .cta__horizon::after {
@@ -60,7 +51,8 @@
 
 .cta__inner {
   position: relative;
-  padding-block: clamp(5rem, 12vh, 10rem);
+  z-index: 1;
+  padding-block: clamp(6rem, 15vh, 12rem);
   display: flex;
   justify-content: center;
 }
@@ -68,18 +60,22 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 46rem;
+  max-width: 50rem;
 }
 .cta__eyebrow {
-  color: var(--cream-45);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--signal);
   margin-bottom: 1.75rem;
 }
 .cta__title {
-  font-size: clamp(2.6rem, 6.5vw, 6.5rem);
+  font-size: clamp(2.8rem, 8vw, 8rem);
   font-variation-settings: 'wdth' var(--wdth-display);
-  line-height: 0.94;
-  letter-spacing: -0.04em;
+  line-height: 0.92;
+  letter-spacing: -0.045em;
   color: var(--cream);
+  text-shadow: 0 0 60px rgba(111, 224, 196, 0.12);
 }
 .cta__sub {
   margin-top: 1.75rem;
@@ -101,14 +97,17 @@
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 1.05rem 2rem;
+  padding: 1.1rem 2.2rem;
   background: var(--cream);
   color: var(--ink);
   border-radius: var(--radius-pill);
   font-weight: 700;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-variation-settings: 'wdth' var(--wdth-wide);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(111, 224, 196, 0.25),
+    0 0 34px rgba(111, 224, 196, 0.2);
   transition:
     transform 0.25s var(--ease-out),
     box-shadow 0.25s var(--ease-out);
@@ -120,27 +119,34 @@
 }
 .cta__primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    0 18px 50px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(111, 224, 196, 0.5),
+    0 0 50px rgba(111, 224, 196, 0.35);
 }
 .cta__primary:hover svg {
   transform: translateX(3px);
 }
 .cta__secondary {
-  font-size: 1.05rem;
-  font-variation-settings: 'wdth' var(--wdth-wide);
-  color: var(--cream);
-  border-bottom: 1px solid var(--cream-20);
+  font-family: var(--mono);
+  font-size: 0.95rem;
+  color: var(--cream-70);
+  border-bottom: 1px solid var(--line-2);
   padding-bottom: 0.2rem;
-  transition: border-color 0.3s var(--ease-out);
+  transition:
+    border-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
 }
 .cta__secondary:hover {
-  border-color: var(--cream);
+  border-color: var(--signal);
+  color: var(--cream);
 }
 
 /* --- footer --- */
 .foot {
   position: relative;
-  border-top: 1px solid var(--cream-12);
+  z-index: 1;
+  border-top: 1px solid var(--line);
   padding-block: 2rem;
   text-align: left;
 }
@@ -161,8 +167,12 @@
   letter-spacing: -0.03em;
   color: var(--cream);
 }
+.foot__brand svg {
+  color: var(--signal);
+}
 .foot__copy {
-  font-size: 0.85rem;
+  font-family: var(--mono);
+  font-size: 0.78rem;
   color: var(--cream-45);
 }
 .foot__note {
@@ -171,11 +181,9 @@
 
 @media (prefers-reduced-motion: reduce) {
   .cta__horizon::after {
-    animation: none;
     display: none;
   }
 }
-
 @media (max-width: 640px) {
   .foot__row {
     flex-direction: column;

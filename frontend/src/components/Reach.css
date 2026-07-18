@@ -1,7 +1,7 @@
 .reach {
   background:
-    radial-gradient(70% 60% at 50% 0%, rgba(64, 51, 48, 0.45), transparent 55%),
-    var(--ink);
+    radial-gradient(70% 60% at 50% 0%, rgba(111, 224, 196, 0.05), transparent 55%),
+    var(--bg);
   overflow: hidden;
 }
 
@@ -12,7 +12,7 @@
   gap: clamp(1.5rem, 4vw, 4rem);
   align-items: baseline;
   padding-bottom: clamp(3.5rem, 7vh, 6rem);
-  border-bottom: 1px solid var(--cream-12);
+  border-bottom: 1px solid var(--line);
 }
 .reach__stat {
   position: relative;
@@ -28,6 +28,10 @@
   line-height: 0.95;
   color: var(--cream);
 }
+.reach__stat:first-child .reach__stat-v {
+  color: var(--signal);
+  text-shadow: 0 0 30px rgba(111, 224, 196, 0.3);
+}
 .reach__stat-k {
   color: var(--cream-45);
 }
@@ -37,7 +41,7 @@
   top: 0;
   bottom: 0;
   width: 1px;
-  background: var(--cream-12);
+  background: var(--line);
 }
 
 .reach__head {
@@ -73,20 +77,20 @@
   gap: 0.7rem;
   flex-shrink: 0;
   padding: 0.7rem 1.4rem;
-  border: 1px solid var(--cream-12);
+  border: 1px solid var(--line-2);
   border-radius: var(--radius-pill);
-  background:
-    linear-gradient(180deg, rgba(255, 248, 237, 0.06), rgba(255, 248, 237, 0.01));
+  background: linear-gradient(180deg, rgba(243, 238, 227, 0.05), rgba(243, 238, 227, 0.01));
   color: var(--cream-70);
   font-size: clamp(0.95rem, 1.4vw, 1.25rem);
   font-weight: 500;
   font-variation-settings: 'wdth' var(--wdth-wide);
   letter-spacing: -0.01em;
   white-space: nowrap;
-  box-shadow: inset 0 1px 0 rgba(255, 248, 237, 0.06);
+  box-shadow: inset 0 1px 0 rgba(243, 238, 227, 0.05);
   transition:
     border-color 0.3s var(--ease-out),
-    color 0.3s var(--ease-out);
+    color 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out);
 }
 .chip::before {
   content: '';
@@ -94,12 +98,15 @@
   height: 6px;
   border-radius: 50%;
   background: var(--signal);
-  box-shadow: 0 0 8px 1px rgba(127, 176, 163, 0.5);
+  box-shadow: 0 0 8px 1px rgba(111, 224, 196, 0.6);
   flex-shrink: 0;
 }
 .chip:hover {
-  border-color: rgba(127, 176, 163, 0.5);
+  border-color: rgba(111, 224, 196, 0.6);
   color: var(--cream);
+  box-shadow:
+    inset 0 1px 0 rgba(243, 238, 227, 0.05),
+    0 0 24px rgba(111, 224, 196, 0.12);
 }
 @keyframes marquee {
   to {

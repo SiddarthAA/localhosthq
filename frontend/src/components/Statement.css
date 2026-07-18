@@ -1,25 +1,30 @@
 .statement {
-  padding-block: clamp(7rem, 15vh, 13rem);
+  padding-block: clamp(8rem, 17vh, 15rem);
+  background:
+    radial-gradient(60% 80% at 50% 50%, rgba(111, 224, 196, 0.05), transparent 70%),
+    var(--bg);
 }
 
 .statement__body {
-  max-width: 24ch;
+  max-width: 22ch;
   margin-inline: auto;
   text-align: center;
-  font-size: clamp(1.9rem, 4.2vw, 3.6rem);
-  line-height: 1.12;
-  letter-spacing: -0.03em;
+  font-size: clamp(2rem, 4.6vw, 4rem);
+  line-height: 1.1;
+  letter-spacing: -0.035em;
   font-weight: 500;
   font-variation-settings: 'wdth' var(--wdth-display);
+  color: var(--cream);
 }
 
 .statement__w {
-  opacity: 0.16;
+  opacity: 0.14;
   transition: opacity 0.1s linear;
 }
-/* the payoff clause never leaves the edge — keep it lit as the anchor */
+/* the payoff clause never leaves the edge — keep it lit, in signal */
 .statement__body .statement__w:nth-last-child(-n + 6) {
-  color: var(--ink);
+  color: var(--signal);
+  opacity: 1;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -27,7 +32,6 @@
     opacity: 1;
   }
 }
-
 @media (max-width: 640px) {
   .statement__body {
     max-width: 100%;

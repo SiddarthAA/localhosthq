@@ -1,12 +1,13 @@
 import Reveal from './Reveal'
 import Logo from './Logo'
+import EtherealShadow from './EtherealShadow'
 import './FooterCTA.css'
 
 export default function FooterCTA() {
   return (
     <section id="contact" className="cta section on-dark" data-nav-theme="dark">
+      <EtherealShadow tone="mixed" className="cta__ether" />
       <span className="cta__ghost" aria-hidden="true">RidewMe</span>
-      <div className="cta__glow" aria-hidden="true" />
       <div className="cta__horizon" aria-hidden="true" />
 
       <div className="shell cta__inner">

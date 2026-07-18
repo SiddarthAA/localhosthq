@@ -2,7 +2,16 @@ import { useEffect, useRef } from 'react'
 import { gsap, prefersReducedMotion } from '../lib/gsap'
 import { scrollTo } from '../lib/site'
 import RoadScene from './RoadScene'
+import EtherealShadow from './EtherealShadow'
 import './Hero.css'
+
+const TICKER = [
+  { label: 'System online', dot: true },
+  { label: '4 signals fused' },
+  { label: '0 bytes off-device' },
+  { label: 'Ed25519 signed' },
+  { label: '~$35 edge board' },
+]
 
 export default function Hero() {
   const root = useRef<HTMLElement>(null)
@@ -10,50 +19,29 @@ export default function Hero() {
   useEffect(() => {
     if (prefersReducedMotion() || !root.current) return
     const ctx = gsap.context(() => {
-      // intro sequence — .from() resolves to the natural (visible) end state,
-      // so a StrictMode double-invoke can never leave content stuck hidden.
       const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
       tl.from('.hero__eyebrow', { autoAlpha: 0, y: 14, duration: 0.7 }, 0.1)
         .from('.mask__in', { yPercent: 115, duration: 1.05, stagger: 0.08 }, 0.15)
-        .from(
-          '.hero__lens',
-          { autoAlpha: 0, scale: 0.9, duration: 1.3, ease: 'power2.out' },
-          0.1,
-        )
-        .from(
-          '[data-hero-fade]',
-          { autoAlpha: 0, y: 16, duration: 0.8, stagger: 0.12 },
-          0.7,
-        )
+        .from('.hero__lens', { autoAlpha: 0, scale: 0.9, duration: 1.3, ease: 'power2.out' }, 0.1)
+        .from('[data-hero-fade]', { autoAlpha: 0, y: 16, duration: 0.8, stagger: 0.1 }, 0.65)
+        .from('.hero__tick', { autoAlpha: 0, y: 10, duration: 0.6, stagger: 0.06 }, 0.9)
 
-      // scroll parallax — text drifts apart, lens swells & dims as it leaves
-      const scrub = {
-        trigger: root.current,
-        start: 'top top',
-        end: 'bottom top',
-        scrub: 0.6,
-      }
+      const scrub = { trigger: root.current, start: 'top top', end: 'bottom top', scrub: 0.6 }
       gsap.to('.hero__title--top', { yPercent: -34, ease: 'none', scrollTrigger: scrub })
       gsap.to('.hero__title--bot', { yPercent: 30, ease: 'none', scrollTrigger: scrub })
-      gsap.to('.hero__lens', {
-        scale: 1.18,
-        autoAlpha: 0.25,
-        ease: 'none',
-        scrollTrigger: scrub,
-      })
+      gsap.to('.hero__lens', { scale: 1.15, autoAlpha: 0.3, ease: 'none', scrollTrigger: scrub })
     }, root)
     return () => ctx.revert()
   }, [])
 
   return (
-    <section
-      id="top"
-      className="hero on-dark"
-      data-nav-theme="dark"
-      ref={root}
-    >
+    <section id="top" className="hero on-dark" data-nav-theme="dark" ref={root}>
+      <EtherealShadow tone="teal" className="hero__ether" />
+      <div className="hero__grid" aria-hidden="true" />
+
       <div className="hero__stage">
         <div className="hero__eyebrow u-label">
+          <span className="hero__eyebrow-dot" />
           On-device fatigue &amp; crash intelligence for fleets
         </div>
 
@@ -80,22 +68,22 @@ export default function Hero() {
           <p>
             Every alert is earned — tuned to the driver behind the wheel,
             corroborated across independent signals, and silent until fatigue is
-            real. No crying wolf. No covered cameras. Just the moment that counts.
+            real. No crying wolf. No covered cameras.
           </p>
+          <button className="hero__scroll" onClick={() => scrollTo('#intro')} type="button">
+            <span className="hero__scroll-line" />
+            See how it works
+          </button>
         </div>
+      </div>
 
-        <button
-          className="hero__scroll u-label"
-          data-hero-fade
-          onClick={() => scrollTo('#intro')}
-          type="button"
-        >
-          <span className="hero__scroll-chevrons" aria-hidden="true">
-            <svg viewBox="0 0 24 24"><path d="M4 8l8 8 8-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-            <svg viewBox="0 0 24 24"><path d="M4 8l8 8 8-8" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      <div className="hero__ticker">
+        {TICKER.map((t) => (
+          <span className="hero__tick u-label" key={t.label}>
+            {t.dot && <span className="hero__tick-dot" />}
+            {t.label}
           </span>
-          See how it works
-        </button>
+        ))}
       </div>
     </section>
   )

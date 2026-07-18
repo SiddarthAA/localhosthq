@@ -1,14 +1,21 @@
+.engine {
+  background:
+    radial-gradient(60% 50% at 15% 10%, rgba(111, 224, 196, 0.05), transparent 55%),
+    var(--bg);
+}
+
+/* --- the moat banner --- */
 .engine__moat {
   margin-top: clamp(3rem, 6vh, 5rem);
   display: flex;
   align-items: center;
   gap: clamp(1.5rem, 3vw, 3rem);
   padding: clamp(1.75rem, 3vw, 2.75rem);
-  border: 1px solid var(--ink-12);
-  border-radius: 20px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
   background:
-    radial-gradient(120% 200% at 0% 0%, rgba(226, 61, 61, 0.06), transparent 55%),
-    var(--cream-2);
+    radial-gradient(120% 200% at 0% 0%, rgba(111, 224, 196, 0.08), transparent 55%),
+    var(--surface);
 }
 .engine__moat-num {
   font-size: clamp(4.5rem, 11vw, 9.5rem);
@@ -16,8 +23,9 @@
   letter-spacing: -0.05em;
   font-weight: 500;
   font-variation-settings: 'wdth' var(--wdth-display);
-  color: var(--ink);
+  color: var(--cream);
   flex-shrink: 0;
+  text-shadow: 0 0 40px rgba(111, 224, 196, 0.25);
 }
 .engine__moat-copy {
   font-size: clamp(1.2rem, 2.2vw, 2rem);
@@ -29,7 +37,7 @@
 }
 .engine__moat-copy em {
   font-style: normal;
-  color: var(--ink);
+  color: var(--signal);
 }
 .engine__moat-copy strong {
   font-weight: 700;
@@ -38,7 +46,7 @@
 
 /* --- layer cards --- */
 .engine__layers {
-  margin-top: clamp(2rem, 4vh, 3rem);
+  margin-top: clamp(1.5rem, 3vh, 2.5rem);
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 0.75rem;
@@ -50,9 +58,9 @@
   align-items: start;
   gap: 1.1rem;
   padding: 1.4rem 1.5rem;
-  border: 1px solid var(--ink-12);
-  border-radius: 16px;
-  background: var(--cream-2);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
   transition:
     transform 0.3s var(--ease-out),
     border-color 0.3s var(--ease-out),
@@ -60,25 +68,23 @@
 }
 .layer:hover {
   transform: translateY(-2px);
-  border-color: var(--ink-20);
-  box-shadow: 0 16px 40px rgba(23, 17, 16, 0.08);
+  border-color: rgba(111, 224, 196, 0.35);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
 }
 .layer__n {
-  font-size: 1rem;
-  font-weight: 700;
-  font-variation-settings: 'wdth' var(--wdth-wide);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  font-weight: 500;
   letter-spacing: 0.05em;
-  color: var(--muted);
-  padding-top: 0.15rem;
-}
-.layer--moat .layer__n {
-  color: var(--alert);
+  color: var(--signal);
+  padding-top: 0.3rem;
 }
 .layer__name {
   font-size: clamp(1.15rem, 1.6vw, 1.45rem);
   font-variation-settings: 'wdth' var(--wdth-display);
   letter-spacing: -0.025em;
   line-height: 1.05;
+  color: var(--cream);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -92,7 +98,7 @@
   max-width: 44ch;
 }
 .layer__arrow {
-  color: var(--ink-20);
+  color: var(--faint);
   transition:
     transform 0.3s var(--ease-out),
     color 0.3s var(--ease-out);
@@ -102,28 +108,34 @@
   height: 22px;
 }
 .layer:hover .layer__arrow {
-  color: var(--ink);
+  color: var(--signal);
   transform: translateX(3px);
 }
 
-/* the moat layer stands apart */
+/* moat layer stands apart */
 .layer--moat {
-  border-color: rgba(226, 61, 61, 0.4);
+  border-color: rgba(255, 81, 72, 0.4);
   background:
-    radial-gradient(120% 160% at 100% 0%, rgba(226, 61, 61, 0.07), transparent 55%),
-    var(--cream-2);
+    radial-gradient(120% 160% at 100% 0%, rgba(255, 81, 72, 0.08), transparent 55%),
+    var(--surface);
+}
+.layer--moat .layer__n {
+  color: var(--alert);
+}
+.layer--moat:hover {
+  border-color: rgba(255, 81, 72, 0.6);
 }
 .layer--moat .layer__name::after {
   content: 'the moat';
-  padding: 0.15em 0.6em;
-  font-size: 0.58rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  padding: 0.2em 0.6em;
+  font-family: var(--mono);
+  font-size: 0.55rem;
+  font-weight: 500;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--alert);
-  border: 1px solid var(--alert);
+  border: 1px solid rgba(255, 81, 72, 0.5);
   border-radius: var(--radius-pill);
-  font-variation-settings: 'wdth' var(--wdth-wide);
 }
 
 @media (max-width: 760px) {

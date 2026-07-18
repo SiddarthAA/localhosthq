@@ -1,5 +1,6 @@
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
+import EtherealShadow from './EtherealShadow'
 import './Crash.css'
 
 const SENSORS = [
@@ -20,6 +21,7 @@ const SPEC = [
 export default function Crash() {
   return (
     <section id="crash" className="crash section on-dark" data-nav-theme="dark">
+      <EtherealShadow tone="red" className="crash__ether" />
       <div className="shell">
         <SectionHead
           eyebrow="Sensor-fusion crash detection"

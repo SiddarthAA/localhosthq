@@ -11,10 +11,16 @@
 }
 
 .sec-head__eyebrow {
-  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--signal);
 }
-.on-dark .sec-head__eyebrow {
-  color: var(--cream-45);
+.sec-head__tick {
+  width: 24px;
+  height: 1px;
+  background: var(--signal);
+  box-shadow: 0 0 8px rgba(111, 224, 196, 0.6);
 }
 
 .sec-head__title {
@@ -23,6 +29,7 @@
   line-height: 0.98;
   letter-spacing: -0.035em;
   max-width: 20ch;
+  color: var(--cream);
 }
 .sec-head--center .sec-head__title {
   max-width: 24ch;
@@ -31,9 +38,6 @@
 .sec-head__intro {
   font-size: clamp(1.05rem, 1.5vw, 1.35rem);
   line-height: 1.45;
-  color: var(--muted);
-  max-width: 54ch;
-}
-.on-dark .sec-head__intro {
   color: var(--cream-70);
+  max-width: 54ch;
 }

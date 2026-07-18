@@ -1,0 +1,12 @@
+.pixelcard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.pixelcard__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.55;
+}
