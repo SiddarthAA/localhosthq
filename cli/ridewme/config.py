@@ -162,4 +162,5 @@ def load_config() -> Config:
         audio_enabled=_b("AUDIO_ENABLED", True),
         naive_mode=_b("NAIVE_MODE", False),
         context_gate=_b("CONTEXT_GATE", False),
+        outbox_path=os.getenv("OUTBOX_PATH", str(REPO_ROOT / "cli" / "outbox.db")),
     )

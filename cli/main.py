@@ -46,6 +46,23 @@ def _console_listener(daemon) -> None:
             daemon.simulate_impact()
 
 
+def _wait_for_start(args) -> None:
+    """Hold before the ride starts so the operator can set up — start the sensor-app,
+    aim the camera, open the dashboard — then press Enter to go. Auto-skips when stdin
+    isn't a TTY (scripts / background runs) or when --no-wait is passed."""
+    if args.no_wait or not sys.stdin or not sys.stdin.isatty():
+        return
+    try:
+        input(
+            "\n  Ready when you are — start the sensor-app, aim the camera, open the dashboard,\n"
+            "  then press Enter to begin the ride  (Ctrl-C to abort)… "
+        )
+    except (EOFError, KeyboardInterrupt):
+        print("\n  aborted before start.")
+        raise SystemExit(0)
+    print("  ▶ ride starting…\n")
+
+
 def main() -> None:
     # Line-buffer stdout so the [drowsy]/[CRASH] log is never swallowed when the
     # output is a pipe or file (block-buffered by default) and the process is
@@ -66,6 +83,7 @@ def main() -> None:
     ap.add_argument("--viz", action="store_true", help="serve the engine X-ray visualizer (annotated video + metrics)")
     ap.add_argument("--viz-port", type=int, default=8090, help="visualizer port (default 8090)")
     ap.add_argument("--crash-at", type=float, default=55.0, help="[--sim] crash time in seconds")
+    ap.add_argument("--no-wait", action="store_true", help="skip the 'press Enter to start the ride' prompt")
     args = ap.parse_args()
 
     cfg = load_config()
@@ -80,7 +98,6 @@ def main() -> None:
 
     fsrc, ssrc = _build_sources(cfg, args)
     daemon = Daemon(cfg, fsrc, ssrc)
-    threading.Thread(target=_console_listener, args=(daemon,), daemon=True).start()
 
     viz_server = None
     if args.viz:
@@ -92,6 +109,9 @@ def main() -> None:
         viz_server = VizServer(viz, port=args.viz_port)
         viz_server.start()
         print(f"[viz] engine X-ray -> http://{socket.gethostname()}:{args.viz_port}/  (open on the tailnet)")
+
+    _wait_for_start(args)
+    threading.Thread(target=_console_listener, args=(daemon,), daemon=True).start()
 
     if args.panel:
         from ridewme.panel import DriverPanel
