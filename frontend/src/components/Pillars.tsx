@@ -33,7 +33,7 @@ const PILLARS = [
   {
     icon: 'eye',
     title: 'It earns every alert',
-    body: 'Most monitors fire on every blink and glance until drivers stop believing them and cover the lens. RideWMe learns each driver’s normal in seconds, then waits for multiple signs of fatigue to agree before it says a word. The result is the one thing safety tech actually needs: alerts drivers trust, and act on.',
+    body: 'Most monitors fire on every blink and glance until drivers stop believing them and cover the lens. RidewMe learns each driver’s normal in seconds, then waits for multiple signs of fatigue to agree before it says a word. The result is the one thing safety tech actually needs: alerts drivers trust, and act on.',
   },
   {
     icon: 'edge',

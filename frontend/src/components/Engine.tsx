@@ -1,6 +1,5 @@
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
-import SpecList, { type Spec } from './SpecList'
 import './Engine.css'
 
 const LAYERS = [
@@ -11,18 +10,6 @@ const LAYERS = [
   { n: '05', name: 'Graduated escalation', desc: 'Calm note → soft chime → rising alarm, with hysteresis that backs off the moment the driver recovers.' },
   { n: '06', name: 'Adaptive duty-cycling', desc: 'Drop inference frame-rate when the driver is clearly alert; ramp back up the instant signals stir.' },
   { n: '07', name: 'Signed emission', desc: 'Tamper-evident Ed25519 events leave the edge. The video never does.' },
-]
-
-const SPEC: Spec[] = [
-  { k: 'Fatigue signals tracked', v: 'Eye closure, PERCLOS, blink dynamics, head-nod, yawn' },
-  { k: 'Per-driver calibration', v: '~12 seconds, every trip' },
-  { k: 'PERCLOS window', v: '60 seconds, rolling' },
-  { k: 'Confirmation rule', v: '≥ 2 independent signals must agree' },
-  { k: 'Alert response', v: '4 graduated tiers, self-recovering' },
-  { k: 'Decision latency', v: 'Milliseconds, fully on-device' },
-  { k: 'Target hardware', v: 'Single-board computer, ~$35 class' },
-  { k: 'Video sent off-device', v: '0 bytes' },
-  { k: 'Event integrity', v: 'Ed25519 signed chain' },
 ]
 
 export default function Engine() {
@@ -36,14 +23,14 @@ export default function Engine() {
         <SectionHead
           eyebrow="The engine"
           title="The co-pilot that knows when to speak"
-          intro="Seven layers turn a raw camera feed into a decision. Detection is the easy part — everything above it is why RideWMe stays quiet when it should, and gets loud only when it has to."
+          intro="Seven layers turn a raw camera feed into a decision. Detection is the easy part — everything above it is why RidewMe stays quiet when it should, and gets loud only when it has to."
         />
 
         <Reveal className="engine__moat">
           <span className="engine__moat-num">&ge;2</span>
           <p className="engine__moat-copy">
             independent signals must <em>agree</em> — and <em>persist</em> —
-            before RideWMe says a word. Deciding when <strong>not</strong> to
+            before RidewMe says a word. Deciding when <strong>not</strong> to
             fire is the whole product.
           </p>
         </Reveal>
@@ -51,19 +38,17 @@ export default function Engine() {
         <Reveal className="engine__layers" as="ol" stagger={0.06}>
           {LAYERS.map((l) => (
             <li className={`layer${l.moat ? ' layer--moat' : ''}`} key={l.n}>
-              <span className="layer__n u-label">{l.n}</span>
+              <span className="layer__n">{l.n}</span>
               <div className="layer__text">
                 <h3 className="layer__name">{l.name}</h3>
                 <p className="layer__desc">{l.desc}</p>
               </div>
+              <span className="layer__arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </span>
             </li>
           ))}
         </Reveal>
-
-        <div className="engine__spec">
-          <p className="u-label engine__spec-label">Decision profile</p>
-          <SpecList items={SPEC} />
-        </div>
       </div>
     </section>
   )

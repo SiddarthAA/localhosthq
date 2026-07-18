@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react'
-import { scrollTo } from '../lib/site'
 import './BookPill.css'
 
-/** Persistent floating CTA — the reference's always-present "Book the Flight". */
+/** Persistent floating CTA — routes to the dashboard (auth wired later). */
 export default function BookPill() {
   const [hidden, setHidden] = useState(false)
 
@@ -19,19 +18,10 @@ export default function BookPill() {
 
   return (
     <div className={`bookpill${hidden ? ' bookpill--hidden' : ''}`}>
-      <button
-        className="bookpill__label"
-        onClick={() => scrollTo('#contact')}
-        type="button"
-      >
-        Book a demo
-      </button>
-      <button
-        className="bookpill__icon"
-        onClick={() => scrollTo('#contact')}
-        type="button"
-        aria-label="Book a demo"
-      >
+      <a className="bookpill__label" href="/dashboard">
+        Login
+      </a>
+      <a className="bookpill__icon" href="/dashboard" aria-label="Login">
         <svg viewBox="0 0 24 24" aria-hidden="true">
           <path
             d="M7 17 17 7M17 7H8M17 7v9"
@@ -42,7 +32,7 @@ export default function BookPill() {
             strokeLinejoin="round"
           />
         </svg>
-      </button>
+      </a>
     </div>
   )
 }

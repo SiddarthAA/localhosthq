@@ -10,13 +10,32 @@
   padding-inline: var(--page-x);
   color: var(--cream);
   transition: color 0.55s var(--ease-inout);
-  pointer-events: none;
-}
-.nav > * {
-  pointer-events: auto;
 }
 body[data-nav='light'] .nav {
   color: var(--ink);
+}
+
+/* frosted backdrop — fades in on scroll, adapts to the section theme */
+.nav__bar {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  opacity: 0;
+  border-bottom: 1px solid transparent;
+  backdrop-filter: blur(14px) saturate(1.2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2);
+  transition: opacity 0.45s var(--ease-inout);
+}
+.nav--scrolled .nav__bar {
+  opacity: 1;
+}
+body[data-nav='light'] .nav__bar {
+  background: rgba(255, 248, 237, 0.72);
+  border-bottom-color: var(--ink-08);
+}
+body[data-nav='dark'] .nav__bar {
+  background: rgba(23, 17, 16, 0.5);
+  border-bottom-color: var(--cream-08);
 }
 
 /* left: primary links */
@@ -31,7 +50,7 @@ body[data-nav='light'] .nav {
   font-weight: 700;
   font-variation-settings: 'wdth' var(--wdth-wide);
   letter-spacing: -0.01em;
-  opacity: 0.92;
+  opacity: 0.9;
   padding-block: 4px;
 }
 .nav__links a::after {
@@ -53,33 +72,19 @@ body[data-nav='light'] .nav {
   transform: scaleX(1);
 }
 
-/* center: wordmark, fades in past the hero */
+/* center: wordmark */
 .nav__wordmark {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   justify-self: center;
-  font-size: 1.35rem;
+  font-size: 1.3rem;
   font-weight: 700;
   font-variation-settings: 'wdth' var(--wdth-display);
   letter-spacing: -0.04em;
-  opacity: 0;
-  transform: translateY(-6px);
-  transition:
-    opacity 0.5s var(--ease-out),
-    transform 0.5s var(--ease-out),
-    color 0.55s var(--ease-inout);
-  pointer-events: none;
 }
-.nav--scrolled .nav__wordmark {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-.nav__eye {
-  width: 30px;
-  height: 19px;
-  overflow: visible;
+.nav__mark {
+  flex-shrink: 0;
 }
 
 /* right: contact */
@@ -96,13 +101,13 @@ body[data-nav='light'] .nav {
   letter-spacing: -0.01em;
 }
 .nav__contact > a:first-child {
-  opacity: 0.92;
+  opacity: 0.9;
 }
 .nav__contact > a:first-child:hover {
   opacity: 1;
 }
 .nav__demo {
-  padding: 0.5rem 1.05rem;
+  padding: 0.55rem 1.35rem;
   border: 1.5px solid currentColor;
   border-radius: var(--radius-pill);
   transition:
@@ -122,17 +127,14 @@ body[data-nav='light'] .nav__demo:hover {
 @media (max-width: 900px) {
   .nav {
     grid-template-columns: auto 1fr;
-    height: 68px;
+    height: 66px;
   }
   .nav__links {
     display: none;
   }
   .nav__wordmark {
     justify-self: start;
-    opacity: 1;
-    transform: none;
-    pointer-events: auto;
-    font-size: 1.15rem;
+    font-size: 1.1rem;
   }
   .nav__contact > a:first-child {
     display: none;

@@ -3,7 +3,7 @@ import { gsap, prefersReducedMotion } from '../lib/gsap'
 import './Statement.css'
 
 const TEXT =
-  'RideWMe is a complete safety engine that rides along inside the vehicle — ' +
+  'RidewMe is a complete safety engine that rides along inside the vehicle — ' +
   'reading fatigue and detecting crashes in real time, deciding with the ' +
   'judgment of a co-pilot, and reporting only what matters. On hardware you ' +
   'already own. With video that never leaves the cab.'

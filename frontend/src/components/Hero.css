@@ -158,6 +158,7 @@
     translate: none;
     text-align: left;
     align-items: flex-start;
+    max-width: 100%;
   }
   .hero__title {
     font-size: clamp(2rem, 9.5vw, 3.6rem);

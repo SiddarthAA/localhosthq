@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { gsap, prefersReducedMotion } from '../lib/gsap'
 import { scrollTo } from '../lib/site'
-import Lens from './Lens'
+import RoadScene from './RoadScene'
 import './Hero.css'
 
 export default function Hero() {
@@ -63,7 +63,7 @@ export default function Hero() {
         </h1>
 
         <div className="hero__lens">
-          <Lens />
+          <RoadScene />
         </div>
 
         <div className="hero__title-wrap">

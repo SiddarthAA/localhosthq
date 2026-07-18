@@ -1,6 +1,5 @@
 import Reveal from './Reveal'
 import SectionHead from './SectionHead'
-import SpecList, { type Spec } from './SpecList'
 import './Crash.css'
 
 const SENSORS = [
@@ -9,23 +8,18 @@ const SENSORS = [
   { label: 'GPS', reading: 'Δ speed −48 km/h', fill: 84 },
 ]
 
-const SPEC: Spec[] = [
+const SPEC = [
   { k: 'Sensors fused', v: 'Accelerometer, gyroscope, GPS' },
   { k: 'Confirmation rule', v: '≥ 2 of 3 signals must agree' },
   { k: 'Severity classes', v: 'Minor, moderate, severe' },
-  { k: 'Dispatch discipline', v: 'Driver-cancel countdown before authorities' },
-  { k: 'False-positive guard', v: 'Gravity-compensated impact baseline' },
-  { k: 'Fleet-manager alert', v: 'Instant' },
-  { k: 'Works offline', v: 'Fully' },
+  { k: 'Dispatch discipline', v: 'Driver-cancel countdown first' },
+  { k: 'False-positive guard', v: 'Gravity-compensated baseline' },
+  { k: 'Fleet-manager alert', v: 'Instant · works fully offline' },
 ]
 
 export default function Crash() {
   return (
-    <section
-      id="crash"
-      className="crash section on-dark"
-      data-nav-theme="dark"
-    >
+    <section id="crash" className="crash section on-dark" data-nav-theme="dark">
       <div className="shell">
         <SectionHead
           eyebrow="Sensor-fusion crash detection"
@@ -50,10 +44,7 @@ export default function Crash() {
                     <span className="csensor__reading">{s.reading}</span>
                   </div>
                   <div className="csensor__track">
-                    <span
-                      className="csensor__fill"
-                      style={{ width: `${s.fill}%` }}
-                    />
+                    <span className="csensor__fill" style={{ width: `${s.fill}%` }} />
                   </div>
                 </li>
               ))}
@@ -65,9 +56,14 @@ export default function Crash() {
             </div>
           </Reveal>
 
-          <div className="crash__spec">
-            <SpecList items={SPEC} />
-          </div>
+          <Reveal className="crash__specs" stagger={0.05}>
+            {SPEC.map((s) => (
+              <div className="cspec" key={s.k}>
+                <span className="cspec__k u-label">{s.k}</span>
+                <span className="cspec__v">{s.v}</span>
+              </div>
+            ))}
+          </Reveal>
         </div>
       </div>
     </section>

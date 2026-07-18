@@ -18,7 +18,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.55rem;
   padding-right: clamp(1.5rem, 4vw, 4rem);
 }
 .reach__stat-v {
@@ -44,7 +44,7 @@
   margin-top: clamp(3.5rem, 7vh, 6rem);
 }
 
-/* --- fleet marquee --- */
+/* --- fleet marquee (futuristic slugs) --- */
 .reach__marquees {
   margin-top: clamp(2.5rem, 5vh, 4rem);
   display: flex;
@@ -54,29 +54,52 @@
 .marquee {
   display: flex;
   overflow: hidden;
-  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
-  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent);
 }
 .marquee__track {
   display: flex;
-  gap: 1rem;
-  padding-right: 1rem;
+  gap: 0.9rem;
+  padding-right: 0.9rem;
   flex-shrink: 0;
-  animation: marquee 42s linear infinite;
+  animation: marquee 46s linear infinite;
 }
 .marquee__track--rev {
   animation-direction: reverse;
 }
 .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
   flex-shrink: 0;
-  padding: 0.75rem 1.5rem;
-  border: 1px solid var(--cream-20);
+  padding: 0.7rem 1.4rem;
+  border: 1px solid var(--cream-12);
   border-radius: var(--radius-pill);
+  background:
+    linear-gradient(180deg, rgba(255, 248, 237, 0.06), rgba(255, 248, 237, 0.01));
   color: var(--cream-70);
-  font-size: clamp(1rem, 1.6vw, 1.4rem);
+  font-size: clamp(0.95rem, 1.4vw, 1.25rem);
+  font-weight: 500;
   font-variation-settings: 'wdth' var(--wdth-wide);
   letter-spacing: -0.01em;
   white-space: nowrap;
+  box-shadow: inset 0 1px 0 rgba(255, 248, 237, 0.06);
+  transition:
+    border-color 0.3s var(--ease-out),
+    color 0.3s var(--ease-out);
+}
+.chip::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 8px 1px rgba(127, 176, 163, 0.5);
+  flex-shrink: 0;
+}
+.chip:hover {
+  border-color: rgba(127, 176, 163, 0.5);
+  color: var(--cream);
 }
 @keyframes marquee {
   to {
