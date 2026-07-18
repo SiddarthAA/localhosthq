@@ -1,0 +1,77 @@
+/* ============================================================
+   RideWMe — design tokens
+   Cloned from the jeskojets.com system, translated to RideWMe.
+   One wide grotesque (Archivo, width axis) + warm monochrome ink/cream,
+   with a single saturated alert-red that appears only when it must.
+   ============================================================ */
+
+:root {
+  /* --- color: warm monochrome (sampled from the reference DOM) --- */
+  --ink: #312726;            /* warm near-black — primary text + dark sections */
+  --ink-2: #241c1b;          /* deeper ink for gradients */
+  --ink-3: #171110;          /* near-black base */
+  --cream: #fff8ed;          /* warm paper — light sections + cards */
+  --cream-2: #f4ecdd;        /* slightly deeper cream for layering */
+  --white: #ffffff;
+  --muted: #7a716e;          /* labels, captions, secondary */
+
+  /* ink tints (dividers / veils) */
+  --ink-90: rgba(49, 39, 38, 0.9);
+  --ink-60: rgba(49, 39, 38, 0.6);
+  --ink-40: rgba(49, 39, 38, 0.4);
+  --ink-20: rgba(49, 39, 38, 0.2);
+  --ink-12: rgba(49, 39, 38, 0.12);
+  --ink-08: rgba(49, 39, 38, 0.08);
+
+  /* cream tints (for text/dividers on dark) */
+  --cream-70: rgba(255, 248, 237, 0.7);
+  --cream-45: rgba(255, 248, 237, 0.45);
+  --cream-20: rgba(255, 248, 237, 0.2);
+  --cream-12: rgba(255, 248, 237, 0.12);
+  --cream-08: rgba(255, 248, 237, 0.08);
+
+  /* the one saturated accent — the escalation beat. Use sparingly. */
+  --alert: #e23d3d;
+  --alert-soft: rgba(226, 61, 61, 0.14);
+  /* calm "system is watching / awake" signal */
+  --signal: #7fb0a3;
+
+  /* --- theme-adaptive fg/bg (set by section + toggled on <body>) --- */
+  --fg: var(--ink);
+  --bg: var(--cream);
+
+  /* --- type --- */
+  --font: "Archivo", "Archivo Placeholder", Arial, Helvetica, sans-serif;
+  --wdth-display: 125;       /* expanded — giant headlines */
+  --wdth-wide: 112;          /* extended — labels / eyebrows */
+  --wdth-body: 100;          /* body copy, kept readable */
+
+  /* fluid scale */
+  --fs-display: clamp(3.25rem, 9.2vw, 11rem);   /* hero words */
+  --fs-mega: clamp(4rem, 13vw, 15rem);          /* backdrop wordmarks */
+  --fs-h1: clamp(2.4rem, 5.4vw, 5.25rem);
+  --fs-lead: clamp(1.6rem, 3.4vw, 3rem);        /* scroll-reveal statement */
+  --fs-h2: clamp(1.9rem, 3.6vw, 3.25rem);
+  --fs-h3: clamp(1.3rem, 1.9vw, 1.75rem);
+  --fs-body: clamp(0.95rem, 1.02vw, 1.0625rem);
+  --fs-label: 0.72rem;
+  --fs-small: 0.8125rem;
+
+  /* --- layout --- */
+  --maxw: 1600px;
+  --page-x: clamp(1.25rem, 4.5vw, 4.5rem);
+  --section-y: clamp(5.5rem, 11vh, 11rem);
+
+  /* --- shape --- */
+  --radius-pill: 999px;
+  --radius-card: 6px;
+
+  /* --- motion --- */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-inout: cubic-bezier(0.76, 0, 0.24, 1);
+  --dur: 0.6s;
+
+  --nav-h: 84px;
+  --z-nav: 100;
+  --z-pill: 90;
+}

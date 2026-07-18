@@ -1,0 +1,221 @@
+@import "./tokens.css";
+
+/* ============================================================
+   reset
+   ============================================================ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  scroll-behavior: auto; /* Lenis owns scrolling */
+  background: var(--ink-3);
+}
+
+body {
+  font-family: var(--font);
+  font-weight: 500;
+  font-size: var(--fs-body);
+  line-height: 1.5;
+  color: var(--fg);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+  transition: background-color 0.7s var(--ease-inout);
+}
+
+img,
+svg,
+canvas {
+  display: block;
+  max-width: 100%;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* ============================================================
+   base typography — the RideWMe wide-grotesque system
+   ============================================================ */
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 500;
+  line-height: 0.92;
+  letter-spacing: -0.03em;
+  font-variation-settings: "wdth" var(--wdth-display);
+}
+
+/* display = the giant expanded headlines */
+.display {
+  font-size: var(--fs-display);
+  line-height: 0.88;
+  letter-spacing: -0.045em;
+  font-weight: 460;
+  font-variation-settings: "wdth" var(--wdth-display);
+}
+
+.mega {
+  font-size: var(--fs-mega);
+  line-height: 0.82;
+  letter-spacing: -0.05em;
+  font-weight: 460;
+  font-variation-settings: "wdth" var(--wdth-display);
+}
+
+/* eyebrow / meta label — uppercase, tracked, extended width */
+.u-label {
+  font-size: var(--fs-label);
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-variation-settings: "wdth" var(--wdth-wide);
+  line-height: 1.3;
+}
+
+.lead {
+  font-size: var(--fs-lead);
+  line-height: 1.14;
+  letter-spacing: -0.025em;
+  font-weight: 500;
+  font-variation-settings: "wdth" var(--wdth-display);
+}
+
+.body-lg {
+  font-size: clamp(1rem, 1.2vw, 1.15rem);
+  line-height: 1.5;
+}
+
+/* ============================================================
+   layout helpers
+   ============================================================ */
+.shell {
+  width: 100%;
+  max-width: var(--maxw);
+  margin-inline: auto;
+  padding-inline: var(--page-x);
+}
+
+.section {
+  position: relative;
+  padding-block: var(--section-y);
+}
+
+/* theme-scoped sections carry their own colors */
+.on-dark {
+  --fg: var(--cream);
+  --bg: var(--ink);
+  color: var(--cream);
+}
+.on-light {
+  --fg: var(--ink);
+  --bg: var(--cream);
+  color: var(--ink);
+}
+
+.hairline {
+  width: 100%;
+  height: 1px;
+  border: 0;
+  background: currentColor;
+  opacity: 0.16;
+}
+
+/* short accent rule used under headings in the reference */
+.rule {
+  width: 40px;
+  height: 2px;
+  background: currentColor;
+  opacity: 0.5;
+}
+
+/* ============================================================
+   a11y
+   ============================================================ */
+:focus-visible {
+  outline: 2px solid var(--alert);
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+::selection {
+  background: var(--ink);
+  color: var(--cream);
+}
+.on-dark ::selection {
+  background: var(--cream);
+  color: var(--ink);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: fixed;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1000;
+  padding: 0.6rem 1rem;
+  background: var(--ink);
+  color: var(--cream);
+  border-radius: var(--radius-pill);
+  transform: translateY(-160%);
+  transition: transform 0.2s var(--ease-out);
+}
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

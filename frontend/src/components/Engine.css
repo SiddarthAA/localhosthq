@@ -1,0 +1,101 @@
+.engine__moat {
+  margin-top: clamp(3rem, 6vh, 5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(1.5rem, 3vw, 3rem);
+  padding: clamp(1.75rem, 3vw, 2.75rem) 0;
+  border-block: 1px solid var(--ink-12);
+}
+.engine__moat-num {
+  font-size: clamp(4.5rem, 11vw, 10rem);
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  font-weight: 500;
+  font-variation-settings: 'wdth' var(--wdth-display);
+  color: var(--ink);
+  flex-shrink: 0;
+}
+.engine__moat-copy {
+  font-size: clamp(1.2rem, 2.2vw, 2rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  font-variation-settings: 'wdth' var(--wdth-wide);
+  max-width: 30ch;
+  color: var(--muted);
+}
+.engine__moat-copy em {
+  font-style: normal;
+  color: var(--ink);
+}
+.engine__moat-copy strong {
+  font-weight: 700;
+  color: var(--alert);
+}
+
+.engine__layers {
+  margin-top: clamp(3rem, 6vh, 5rem);
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0 clamp(2.5rem, 6vw, 7rem);
+}
+.layer {
+  display: flex;
+  gap: 1.25rem;
+  padding: 1.5rem 0;
+  border-top: 1px solid var(--ink-12);
+}
+.layer__n {
+  color: var(--muted);
+  padding-top: 0.35rem;
+  min-width: 2ch;
+}
+.layer--moat .layer__n {
+  color: var(--alert);
+}
+.layer__name {
+  font-size: clamp(1.2rem, 1.7vw, 1.6rem);
+  font-variation-settings: 'wdth' var(--wdth-display);
+  letter-spacing: -0.025em;
+  line-height: 1.05;
+  margin-bottom: 0.5rem;
+}
+.layer__desc {
+  color: var(--muted);
+  font-size: 0.98rem;
+  line-height: 1.5;
+  max-width: 42ch;
+}
+.layer--moat .layer__name::after {
+  content: 'the moat';
+  display: inline-block;
+  margin-left: 0.7rem;
+  padding: 0.15em 0.6em;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  vertical-align: middle;
+  color: var(--alert);
+  border: 1px solid var(--alert);
+  border-radius: var(--radius-pill);
+  font-variation-settings: 'wdth' var(--wdth-wide);
+}
+
+.engine__spec {
+  margin-top: clamp(3.5rem, 7vh, 6rem);
+}
+.engine__spec-label {
+  color: var(--muted);
+  margin-bottom: 1.5rem;
+}
+
+@media (max-width: 760px) {
+  .engine__layers {
+    grid-template-columns: 1fr;
+  }
+  .engine__moat {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+}

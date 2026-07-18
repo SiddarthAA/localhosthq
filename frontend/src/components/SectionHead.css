@@ -1,0 +1,39 @@
+.sec-head {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+  max-width: 62ch;
+}
+.sec-head--center {
+  align-items: center;
+  text-align: center;
+  margin-inline: auto;
+}
+
+.sec-head__eyebrow {
+  color: var(--muted);
+}
+.on-dark .sec-head__eyebrow {
+  color: var(--cream-45);
+}
+
+.sec-head__title {
+  font-size: var(--fs-h2);
+  font-variation-settings: 'wdth' var(--wdth-display);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
+  max-width: 20ch;
+}
+.sec-head--center .sec-head__title {
+  max-width: 24ch;
+}
+
+.sec-head__intro {
+  font-size: clamp(1.05rem, 1.5vw, 1.35rem);
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 54ch;
+}
+.on-dark .sec-head__intro {
+  color: var(--cream-70);
+}

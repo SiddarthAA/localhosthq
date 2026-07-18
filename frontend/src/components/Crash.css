@@ -1,0 +1,122 @@
+.crash {
+  background:
+    radial-gradient(80% 60% at 80% 0%, rgba(64, 51, 48, 0.5), transparent 55%),
+    var(--ink);
+}
+
+.crash__grid {
+  margin-top: clamp(3rem, 6vh, 5rem);
+  display: grid;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  gap: clamp(2rem, 5vw, 5rem);
+  align-items: start;
+}
+
+/* --- fusion readout panel --- */
+.crash__panel {
+  padding: clamp(1.5rem, 2.5vw, 2.25rem);
+  border: 1px solid var(--cream-12);
+  border-radius: var(--radius-card);
+  background: rgba(23, 17, 16, 0.5);
+}
+.crash__panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--cream-45);
+  margin-bottom: 1.75rem;
+}
+.crash__live {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--alert);
+}
+.crash__live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--alert);
+  animation: crashPulse 1.4s var(--ease-out) infinite;
+}
+
+.crash__sensors {
+  display: flex;
+  flex-direction: column;
+  gap: 1.3rem;
+}
+.csensor__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 0.55rem;
+}
+.csensor__label {
+  font-weight: 700;
+  font-variation-settings: 'wdth' var(--wdth-wide);
+  letter-spacing: -0.01em;
+}
+.csensor__reading {
+  font-size: 0.85rem;
+  color: var(--cream-45);
+  font-variation-settings: 'wdth' var(--wdth-wide);
+}
+.csensor__track {
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--cream-08);
+  overflow: hidden;
+}
+.csensor__fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--signal), var(--alert));
+}
+
+.crash__verdict {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+  margin-top: 1.9rem;
+  padding-top: 1.6rem;
+  border-top: 1px solid var(--cream-12);
+}
+.crash__verdict-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--alert);
+  box-shadow: 0 0 0 5px var(--alert-soft);
+}
+.crash__verdict-label {
+  font-size: 1.2rem;
+  font-weight: 700;
+  font-variation-settings: 'wdth' var(--wdth-display);
+  letter-spacing: -0.01em;
+  color: var(--cream);
+  text-transform: uppercase;
+}
+.crash__verdict-meta {
+  margin-left: auto;
+  font-size: 0.85rem;
+  color: var(--cream-45);
+  font-variation-settings: 'wdth' var(--wdth-wide);
+}
+
+@keyframes crashPulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.25;
+  }
+}
+
+@media (max-width: 860px) {
+  .crash__grid {
+    grid-template-columns: 1fr;
+  }
+}

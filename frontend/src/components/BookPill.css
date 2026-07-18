@@ -1,0 +1,72 @@
+.bookpill {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(16px, 3vh, 32px);
+  transform: translateX(-50%);
+  z-index: var(--z-pill);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition:
+    opacity 0.4s var(--ease-out),
+    transform 0.5s var(--ease-out);
+}
+.bookpill--hidden {
+  opacity: 0;
+  transform: translate(-50%, 140%);
+  pointer-events: none;
+}
+
+.bookpill__label {
+  height: 56px;
+  padding: 0 1.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--cream);
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 1rem;
+  font-variation-settings: 'wdth' var(--wdth-wide);
+  letter-spacing: -0.01em;
+  box-shadow: 0 10px 34px rgba(23, 17, 16, 0.24);
+  transition:
+    transform 0.3s var(--ease-out),
+    box-shadow 0.3s var(--ease-out);
+}
+.bookpill__label:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(23, 17, 16, 0.3);
+}
+
+.bookpill__icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--ink);
+  color: var(--cream);
+  box-shadow: 0 10px 34px rgba(23, 17, 16, 0.24);
+  transition:
+    transform 0.35s var(--ease-out),
+    background-color 0.3s var(--ease-out);
+}
+.bookpill__icon svg {
+  width: 22px;
+  height: 22px;
+}
+.bookpill__icon:hover {
+  background: var(--alert);
+  transform: rotate(45deg);
+}
+
+@media (max-width: 640px) {
+  .bookpill__label {
+    height: 50px;
+    font-size: 0.9rem;
+    padding: 0 1.25rem;
+  }
+  .bookpill__icon {
+    width: 50px;
+    height: 50px;
+  }
+}

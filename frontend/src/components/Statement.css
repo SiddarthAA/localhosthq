@@ -1,0 +1,35 @@
+.statement {
+  padding-block: clamp(7rem, 15vh, 13rem);
+}
+
+.statement__body {
+  max-width: 24ch;
+  margin-inline: auto;
+  text-align: center;
+  font-size: clamp(1.9rem, 4.2vw, 3.6rem);
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  font-weight: 500;
+  font-variation-settings: 'wdth' var(--wdth-display);
+}
+
+.statement__w {
+  opacity: 0.16;
+  transition: opacity 0.1s linear;
+}
+/* the payoff clause never leaves the edge — keep it lit as the anchor */
+.statement__body .statement__w:nth-last-child(-n + 6) {
+  color: var(--ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .statement__w {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .statement__body {
+    max-width: 100%;
+  }
+}
