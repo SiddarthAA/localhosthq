@@ -80,18 +80,20 @@ class Tuning:
     accel_baseline_tau_s: float = 3.0           # slow EMA baseline (absorbs gravity + mounting)
     motion_stale_s: float = 3.0                 # motion older than this -> gate assumes moving (fail-safe)
     # Pre-gate
-    pregate_min_speed_mps: float = 2.0          # was the vehicle moving before the candidate?
-    # Layer 1 — trigger (cheap wake-up, not a decision) — lenient
-    accel_spike_g: float = 2.0                  # accel deviation (g) that wakes Layer 2
-    # Layer 2 — corroboration over the window — lenient
+    pregate_min_speed_mps: float = 1.0          # was the vehicle moving before the candidate? (demo: slow-walk ok)
+    # Layer 1 — trigger (cheap wake-up, not a decision) — demo-tuned, easy to reach.
+    # NB: this is deviation-FROM-BASELINE g (resting ~1g gravity is absorbed), so a
+    # ~2g total phone reading = ~1g of spike here.
+    accel_spike_g: float = 1.0                  # accel deviation (g) that wakes Layer 2
+    # Layer 2 — corroboration over the window — demo-tuned; STILL needs >= 2 of 3 to agree
     crash_l2_window_s: float = 2.0              # score this window around the candidate
-    jerk_g_per_s: float = 13.0                  # impact jerk — separates a crash from hard braking
-    gyro_axis_dps: float = 120.0                # per-axis rotation (deg/s); need >= 2 axes
+    jerk_g_per_s: float = 6.0                   # impact jerk — separates a crash from hard braking
+    gyro_axis_dps: float = 60.0                 # per-axis rotation (deg/s); need >= 2 axes (a hand twist hits this)
     gyro_axes_required: int = 2
-    speed_drop_mps: float = 5.0                 # sudden GPS speed drop across the window...
-    speed_drop_end_mps: float = 3.5             # ...toward (near) zero — impact, not gradual braking
-    severity_moderate_g: float = 3.0            # peak-Δg severity bands: minor < 3.0 ...
-    severity_severe_g: float = 5.0              # ... moderate 3.0–5 · severe > 5
+    speed_drop_mps: float = 4.0                 # sudden GPS speed drop across the window...
+    speed_drop_end_mps: float = 4.0             # ...toward (near) zero — impact, not gradual braking
+    severity_moderate_g: float = 1.5            # peak-Δg (deviation) severity bands: minor < 1.5 ...
+    severity_severe_g: float = 2.5              # ... moderate 1.5–2.5 · severe > 2.5
     # Layer 3 — behavioral confirmation window
     crash_l3_window_s: float = 13.0             # base human window (12–15s)
     crash_l3_window_severe_s: float = 8.0       # severe escalates faster (shorter window)
