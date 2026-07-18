@@ -1,6 +1,7 @@
-// sensor-app emitter — Safari on iphone-xr. Sensors over WebSocket (JSON),
-// video over WebSocket (JPEG). Streaming is a toggle; capture fps follows the
-// phone camera's own frame rate (capped) and backs off under network pressure.
+// RidewMe emitter — Safari on iphone-xr. Sensors over WebSocket (JSON), video
+// over WebSocket (JPEG). Streaming is a toggle; capture fps follows the phone
+// camera's own frame rate (capped) and backs off under network pressure. The
+// accel/gyro graphs plot the phone's OWN sensor data locally (no server trip).
 
 const CONFIG = {
   maxFps: 30,     // never send faster than this, even if the camera is quicker
@@ -11,6 +12,7 @@ const CONFIG = {
 
 const $ = (id) => document.getElementById(id);
 const wsBase = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host;
+const dpr = Math.max(1, window.devicePixelRatio || 1);
 
 const state = { accel: null, accelG: null, gyro: null, orient: null, gps: null, interval: null };
 const stats = { frames: 0, packets: 0, lastFrames: 0 };
@@ -27,12 +29,72 @@ function setBadge(text, kind) { // kind: '' | 'live' | 'off'
   $('badge').className = 'badge' + (kind ? ' badge-' + kind : '');
   $('badgeText').textContent = text;
 }
-function setToggle(text, variant) { // variant: 'primary' | 'destructive'
+function setToggle(text, variant) { // variant: 'success' | 'destructive'
   const b = $('toggle');
   b.className = 'btn btn-lg btn-' + variant;
   b.textContent = text;
   b.disabled = false;
 }
+
+// ---------------- live strip charts (local sensor data) ----------------
+class Strip {
+  constructor(canvas, colors) {
+    this.canvas = canvas;
+    this.ctx = canvas.getContext('2d');
+    this.colors = colors;
+    this.N = 220;
+    this.data = colors.map(() => []);
+    this.resize();
+  }
+  resize() {
+    const c = this.canvas;
+    c.width = Math.max(1, Math.floor(c.clientWidth * dpr));
+    c.height = Math.max(1, Math.floor(c.clientHeight * dpr));
+  }
+  push(vals) {
+    for (let i = 0; i < this.colors.length; i++) {
+      const v = vals[i], a = this.data[i];
+      a.push((typeof v === 'number' && isFinite(v)) ? v : 0);
+      if (a.length > this.N) a.shift();
+    }
+  }
+  clear() { this.data = this.colors.map(() => []); }
+  draw() {
+    const { ctx, canvas: c } = this, W = c.width, H = c.height;
+    ctx.clearRect(0, 0, W, H);
+    let mn = Infinity, mx = -Infinity;
+    for (const a of this.data) for (const v of a) { if (v < mn) mn = v; if (v > mx) mx = v; }
+    if (!isFinite(mn)) { mn = -1; mx = 1; }
+    if (mn === mx) { mn -= 1; mx += 1; }
+    const pad = (mx - mn) * 0.15; mn -= pad; mx += pad;
+    const yOf = (v) => H - ((v - mn) / (mx - mn)) * H;
+
+    if (mn < 0 && mx > 0) {
+      ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, yOf(0)); ctx.lineTo(W, yOf(0)); ctx.stroke();
+    }
+    const step = W / (this.N - 1);
+    for (let i = 0; i < this.colors.length; i++) {
+      const a = this.data[i];
+      if (a.length < 2) continue;
+      const offset = W - (a.length - 1) * step;
+      ctx.strokeStyle = this.colors[i];
+      ctx.lineWidth = 1.5 * dpr;
+      ctx.lineJoin = 'round';
+      ctx.beginPath();
+      for (let j = 0; j < a.length; j++) {
+        const x = offset + j * step, y = yOf(a[j]);
+        j ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.stroke();
+    }
+  }
+}
+const AXES = ['#22d3ee', '#a78bfa', '#f472b6'];
+const charts = { accel: new Strip($('c_accel'), AXES), gyro: new Strip($('c_gyro'), AXES) };
+window.addEventListener('resize', () => { for (const k in charts) charts[k].resize(); });
+function drawLoop() { for (const k in charts) charts[k].draw(); requestAnimationFrame(drawLoop); }
+requestAnimationFrame(drawLoop);
 
 // ---------------- WebSockets ----------------
 function connectWS(path) {
@@ -66,6 +128,8 @@ function onMotion(e) {
   state.accelG = { x: ag.x, y: ag.y, z: ag.z };
   state.gyro = { alpha: r.alpha, beta: r.beta, gamma: r.gamma };
   state.interval = e.interval;
+  charts.accel.push([ag.x, ag.y, ag.z]);        // plot locally, ~60 Hz
+  charts.gyro.push([r.alpha, r.beta, r.gamma]);
   sendSensor();
 }
 function onOrient(e) {
@@ -108,11 +172,10 @@ async function startVideo() {
   video.srcObject = stream;
   await video.play();
 
-  // Adapt capture rate to the phone camera's actual frame rate.
   const st = stream.getVideoTracks()[0].getSettings();
   const camFps = Math.round(st.frameRate || CONFIG.maxFps);
   targetFps = Math.min(camFps, CONFIG.maxFps);
-  $('m_cam').textContent = `${st.width || '?'}×${st.height || '?'}@${camFps}`;
+  $('m_cam').textContent = `${st.width || '?'}×${st.height || '?'} @${camFps}`;
   log(`camera ${st.width}×${st.height} @${camFps} → sending up to ${targetFps} fps`);
 
   const canvas = $('work');
@@ -161,6 +224,7 @@ async function start() {
 
   $('toggle').disabled = true;
   setBadge('starting…', '');
+  charts.accel.clear(); charts.gyro.clear();
   try {
     await requestPermissions();
     sensorWS = connectWS('/ws/sensors');
@@ -175,7 +239,7 @@ async function start() {
   } catch (e) {
     running = false;
     setBadge('start failed', 'off');
-    setToggle('Start streaming', 'primary');
+    setToggle('Start streaming', 'success');
     log('start failed: ' + e.message);
   }
 }
@@ -189,23 +253,20 @@ function stop() {
   for (const ws of [sensorWS, videoWS]) { try { ws && ws.close(); } catch {} }
   sensorWS = videoWS = null;
   if (wakeLock) { try { wakeLock.release(); } catch {} wakeLock = null; }
+  $('m_cam').textContent = '—';
   setBadge('idle', '');
-  setToggle('Start streaming', 'primary');
+  setToggle('Start streaming', 'success');
   log('streaming stopped');
 }
 
 $('toggle').addEventListener('click', () => (running ? stop() : start()));
 
-// ---------------- Live readouts ----------------
+// ---------------- Live readouts (1 Hz) ----------------
 const fmt = (v, n = 1) => (typeof v === 'number' && isFinite(v)) ? v.toFixed(n) : '—';
 setInterval(() => {
   $('m_fps').textContent = stats.frames - stats.lastFrames;
   stats.lastFrames = stats.frames;
-  $('m_frames').textContent = stats.frames;
   $('m_pkts').textContent = stats.packets;
-  const g = state.gyro || {}, a = state.accelG || {}, o = state.orient || {}, gp = state.gps;
-  $('m_gyro').textContent = `${fmt(g.alpha)}, ${fmt(g.beta)}, ${fmt(g.gamma)}`;
-  $('m_accel').textContent = `${fmt(a.x)}, ${fmt(a.y)}, ${fmt(a.z)}`;
-  $('m_compass').textContent = fmt(o.compass, 0);
-  $('m_gps').textContent = gp ? `${fmt(gp.lat, 5)}, ${fmt(gp.lon, 5)}` : '—';
+  const gp = state.gps;
+  $('m_gps').textContent = gp ? `${fmt(gp.lat, 4)}, ${fmt(gp.lon, 4)}` : '—';
 }, 1000);

@@ -1,14 +1,17 @@
-/* sensor-app design system — shadcn-inspired (tokens, cards, buttons, badges),
-   plain CSS, no build step. Futuristic cyan accent + subtle grid/glow. */
+/* RidewMe design system — shadcn-inspired (tokens, cards, buttons, badges),
+   plain CSS, no build step. Sharp/futuristic: cyan tech accent, green/red action
+   semantics, thin borders, subtle grid + glow. */
 :root {
   --background: 240 10% 3.9%;
   --foreground: 0 0% 98%;
   --card: 240 9% 6.5%;
   --border: 240 5% 15%;
   --muted: 240 5% 65%;
-  --primary: 186 100% 50%;          /* cyan */
+  --primary: 186 100% 50%;          /* cyan — ambient tech accent */
   --primary-foreground: 200 100% 6%;
-  --destructive: 0 84% 60%;
+  --success: 152 72% 42%;           /* green — "start / live" */
+  --success-foreground: 150 100% 6%;
+  --destructive: 0 84% 60%;         /* red — "stop / error" */
   --destructive-foreground: 0 0% 98%;
   --ring: 186 100% 50%;
   --radius: 12px;
@@ -26,10 +29,10 @@ body {
 body::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background:
-    radial-gradient(900px 500px at 50% -8%, hsl(var(--primary) / .10), transparent 60%),
+    radial-gradient(900px 480px at 50% -8%, hsl(var(--primary) / .10), transparent 60%),
     linear-gradient(hsl(var(--foreground) / .022) 1px, transparent 1px),
     linear-gradient(90deg, hsl(var(--foreground) / .022) 1px, transparent 1px);
-  background-size: 100% 100%, 46px 46px, 46px 46px;
+  background-size: 100% 100%, 44px 44px, 44px 44px;
 }
 .mono { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
 
@@ -44,18 +47,19 @@ body::before {
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
   height: var(--h); padding: 0 18px;
   border: 1px solid transparent; border-radius: calc(var(--radius) - 4px);
-  font-size: 14px; font-weight: 600; letter-spacing: .2px; cursor: pointer;
-  transition: transform .04s ease, background .15s ease, border-color .15s ease, opacity .15s ease;
+  font-size: 14px; font-weight: 650; letter-spacing: .3px; cursor: pointer;
+  transition: transform .04s ease, background .15s ease, box-shadow .15s ease, opacity .15s ease;
   user-select: none;
 }
 .btn:active { transform: translateY(1px); }
 .btn:focus-visible { outline: none; box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4px hsl(var(--ring) / .7); }
-.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
 .btn-lg { --h: 54px; font-size: 15px; border-radius: calc(var(--radius) - 2px); }
+.btn-success { background: hsl(var(--success)); color: hsl(var(--success-foreground)); box-shadow: 0 0 28px hsl(var(--success) / .28); }
+.btn-success:hover { background: hsl(var(--success) / .92); }
+.btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); box-shadow: 0 0 28px hsl(var(--destructive) / .28); }
+.btn-destructive:hover { background: hsl(var(--destructive) / .92); }
 .btn-primary { background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); box-shadow: 0 0 26px hsl(var(--primary) / .25); }
-.btn-primary:hover { background: hsl(var(--primary) / .9); }
-.btn-destructive { background: hsl(var(--destructive)); color: hsl(var(--destructive-foreground)); }
-.btn-destructive:hover { background: hsl(var(--destructive) / .9); }
 .btn-outline { background: transparent; border-color: hsl(var(--border)); color: hsl(var(--foreground)); }
 .btn-outline:hover { border-color: hsl(var(--primary) / .6); color: hsl(var(--primary)); }
 
@@ -63,16 +67,17 @@ body::before {
   display: inline-flex; align-items: center; gap: 6px;
   height: 24px; padding: 0 10px; border-radius: 999px;
   border: 1px solid hsl(var(--border)); background: hsl(var(--foreground) / .03);
-  font-size: 11px; font-weight: 600; letter-spacing: .3px; color: hsl(var(--muted)); text-transform: uppercase;
+  font-size: 11px; font-weight: 600; letter-spacing: .4px; color: hsl(var(--muted)); text-transform: uppercase;
 }
-.badge-live { color: hsl(var(--primary)); border-color: hsl(var(--primary) / .4); background: hsl(var(--primary) / .08); }
-.badge-off  { color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / .4); background: hsl(var(--destructive) / .08); }
+.badge-live { color: hsl(var(--success)); border-color: hsl(var(--success) / .45); background: hsl(var(--success) / .10); }
+.badge-off  { color: hsl(var(--destructive)); border-color: hsl(var(--destructive) / .45); background: hsl(var(--destructive) / .10); }
 
 .dot { width: 8px; height: 8px; border-radius: 50%; background: hsl(var(--muted) / .5); flex: none; }
-.dot.on { background: hsl(var(--primary)); box-shadow: 0 0 8px hsl(var(--primary)); }
+.dot.on { background: hsl(var(--success)); box-shadow: 0 0 8px hsl(var(--success)); }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .4; } }
-.badge-live .dot { background: hsl(var(--primary)); box-shadow: 0 0 8px hsl(var(--primary)); animation: pulse 1.4s ease-in-out infinite; }
+.badge-live .dot { background: hsl(var(--success)); box-shadow: 0 0 8px hsl(var(--success)); animation: pulse 1.4s ease-in-out infinite; }
+.badge-off .dot { background: hsl(var(--destructive)); box-shadow: 0 0 8px hsl(var(--destructive)); }
 
 .stat { padding: 11px 13px; }
-.stat .k { font-size: 10.5px; text-transform: uppercase; letter-spacing: .5px; color: hsl(var(--muted)); }
-.stat .v { font-size: 16px; margin-top: 4px; color: hsl(var(--foreground)); }
+.stat .k { font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: hsl(var(--muted)); }
+.stat .v { font-size: 17px; margin-top: 4px; color: hsl(var(--foreground)); }
