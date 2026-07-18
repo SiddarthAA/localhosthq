@@ -1,0 +1,9 @@
+# cli — headless edge daemon ("driver box"). Installs into the shared root .venv.
+# Consumer deps for the sensor-app streams (see sensor-app/README.md):
+numpy>=1.26
+opencv-python>=4.9
+websocket-client>=1.7
+# Edge CV + signing (locked stack — ported in over time):
+mediapipe>=0.10
+pynacl>=1.5
+websockets>=12

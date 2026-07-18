@@ -1,0 +1,9 @@
+# Shared Python venv (backend + cli) — mirror of the sensor-app convention
+.venv/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+.DS_Store

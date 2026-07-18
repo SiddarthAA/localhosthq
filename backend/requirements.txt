@@ -1,0 +1,4 @@
+# backend — thin FastAPI relay hub (no CV, no decisions). Installs into the shared root .venv.
+fastapi>=0.110
+uvicorn[standard]>=0.29
+websockets>=12
