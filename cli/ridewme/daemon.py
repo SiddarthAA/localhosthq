@@ -73,6 +73,12 @@ class Daemon:
         self._camera_ok = False
         self._last_sample_t = 0.0
         self._naive_last = E.AWAKE
+        # driver-box panel state (updated each camera tick; read by panel_snapshot)
+        self._panel_level = E.AWAKE
+        self._panel_score = 0.0
+        self._panel_gated = False
+        self._panel_fired: list = []
+        self._panel_flash: tuple | None = None   # (msg, until_ts, style)
 
     # ── shared state ──────────────────────────────────────────────────
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
@@ -84,7 +90,8 @@ class Daemon:
         return ev
 
     # ── lifecycle ─────────────────────────────────────────────────────
-    def run(self) -> None:
+    def start(self) -> None:
+        """Start the engines (hello + uplink + the three loops). Non-blocking."""
         hello_payload = {
             "pubkey": self.chain.pubkey_b64,
             "device": self.cfg.driver_id,
@@ -100,13 +107,12 @@ class Daemon:
         print(f"[daemon] session={self.session_id} driver={self.cfg.driver_id} "
               f"uplink={self.cfg.ingest_ws_url} naive={self.naive is not None}")
 
-        threads = [
-            threading.Thread(target=self._camera_loop, name="camera", daemon=True),
-            threading.Thread(target=self._sensor_loop, name="sensor", daemon=True),
-            threading.Thread(target=self._heartbeat_loop, name="heartbeat", daemon=True),
-        ]
-        for th in threads:
-            th.start()
+        for target, name in ((self._camera_loop, "camera"), (self._sensor_loop, "sensor"),
+                             (self._heartbeat_loop, "heartbeat")):
+            threading.Thread(target=target, name=name, daemon=True).start()
+
+    def run(self) -> None:
+        self.start()
         try:
             while not self._stop.is_set():
                 self._stop.wait(0.5)
@@ -121,6 +127,29 @@ class Daemon:
 
     def simulate_impact(self) -> None:
         self.crash.simulate_impact(time.time())
+
+    def _flash(self, msg: str, style: str, secs: float) -> None:
+        self._panel_flash = (msg, time.time() + secs, style)
+
+    def panel_snapshot(self) -> dict:
+        """Driver-facing state for the in-cabin panel (design: what the driver sees)."""
+        now = time.time()
+        inc = self.crash.active_incident
+        incident = None
+        if inc is not None:
+            incident = {"status": inc.status, "severity": inc.severity,
+                        "peak_g": inc.peak_g, "countdown_s": max(0.0, inc.deadline - now)}
+        flash = None
+        if self._panel_flash and now < self._panel_flash[1]:
+            flash = {"msg": self._panel_flash[0], "style": self._panel_flash[2]}
+        return {
+            "driver_id": self.cfg.driver_id, "session_id": self.session_id,
+            "calibrated": self.calib.ready, "calib_progress": self.calib.progress(now),
+            "level": self._panel_level, "score": self._panel_score, "gated": self._panel_gated,
+            "fired": self._panel_fired, "speed_mps": self.motion.get().speed_mps,
+            "link": self.uplink.mode, "incident": incident, "flash": flash,
+            "naive": self.naive is not None,
+        }
 
     def shutdown(self) -> None:
         self._stop.set()
@@ -156,7 +185,11 @@ class Daemon:
             self._fps = 0.9 * self._fps + 0.1 * (1.0 / dt) if self._fps else 1.0 / dt
 
             if self.naive is not None:
-                self._emit_naive(self.naive.update(raw), raw, ts)
+                level = self.naive.update(raw)
+                self._panel_level = level
+                self._panel_score = 100.0 if level == E.ALARM else 0.0
+                self._panel_fired = ["naive"] if level == E.ALARM else []
+                self._emit_naive(level, raw, ts)
                 self._pace(loop_start, self.t.fps_full)
                 continue
 
@@ -167,6 +200,8 @@ class Daemon:
             gated, reason = self.gate.evaluate(self.motion.moving_for_gate(ts))  # L4 (Seam 1)
             esc = self.esc.update(trust.score, dt, gated)   # L5
             self.audio.on_escalation(esc.effective_level, esc.audio_intensity)
+            self._panel_level, self._panel_score = esc.level, trust.score
+            self._panel_gated, self._panel_fired = gated, trust.fired
             duty = self.duty.update(trust.score, trust.agree_count, ts)  # L6
             target_fps = duty.target_fps
             self._duty_state = duty.state
@@ -248,9 +283,11 @@ class Daemon:
                   f"signals={payload['signals_fired']} -> {payload['window_seconds']:.0f}s window "
                   f"('c' cancel){tag}")
         elif status == E.CONFIRMED:
+            self._flash("Emergency services notified — help is on the way", "bold white on red", 6.0)
             print(f"[CRASH] CONFIRMED · {payload['incident_id']} "
                   f"motion={payload.get('final_motion')} -> DISPATCH @ {payload.get('location')}")
         else:  # cancelled
+            self._flash("Cancelled — glad you're OK", "bold black on green", 4.0)
             print(f"[CRASH] cancelled · {payload['incident_id']} reason={payload.get('reason')}")
 
     # ── heartbeat ─────────────────────────────────────────────────────

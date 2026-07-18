@@ -17,3 +17,6 @@ numpy>=1.26
 
 # in-cabin audio (L5); degrades gracefully if the backend/libs are unavailable
 simpleaudio>=1.0
+
+# in-cabin driver panel (--panel); degrades to plain logs if absent / no TTY
+rich>=13.0

@@ -54,6 +54,7 @@ def main() -> None:
     ap.add_argument("--driver-id", help="override DRIVER_ID")
     ap.add_argument("--backend-host", help="override BACKEND_HOST")
     ap.add_argument("--no-audio", action="store_true", help="disable in-cabin audio")
+    ap.add_argument("--panel", action="store_true", help="live in-cabin driver panel (needs a TTY)")
     ap.add_argument("--crash-at", type=float, default=55.0, help="[--sim] crash time in seconds")
     args = ap.parse_args()
 
@@ -70,7 +71,18 @@ def main() -> None:
     fsrc, ssrc = _build_sources(cfg, args)
     daemon = Daemon(cfg, fsrc, ssrc)
     threading.Thread(target=_console_listener, args=(daemon,), daemon=True).start()
-    daemon.run()
+
+    if args.panel:
+        from ridewme.panel import DriverPanel
+        daemon.start()
+        try:
+            DriverPanel(daemon.panel_snapshot).run(daemon._stop)
+        except KeyboardInterrupt:
+            pass
+        finally:
+            daemon.shutdown()
+    else:
+        daemon.run()
 
 
 if __name__ == "__main__":
