@@ -69,8 +69,9 @@ class Strip {
     const pad = (mx - mn) * 0.15; mn -= pad; mx += pad;
     const yOf = (v) => H - ((v - mn) / (mx - mn)) * H;
 
+    ctx.shadowBlur = 0;
     if (mn < 0 && mx > 0) {
-      ctx.strokeStyle = 'rgba(255,255,255,0.07)'; ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(0, yOf(0)); ctx.lineTo(W, yOf(0)); ctx.stroke();
     }
     const step = W / (this.N - 1);
@@ -79,8 +80,10 @@ class Strip {
       if (a.length < 2) continue;
       const offset = W - (a.length - 1) * step;
       ctx.strokeStyle = this.colors[i];
-      ctx.lineWidth = 1.5 * dpr;
+      ctx.lineWidth = 1.25 * dpr;
       ctx.lineJoin = 'round';
+      ctx.shadowColor = this.colors[i];
+      ctx.shadowBlur = 5 * dpr;
       ctx.beginPath();
       for (let j = 0; j < a.length; j++) {
         const x = offset + j * step, y = yOf(a[j]);
