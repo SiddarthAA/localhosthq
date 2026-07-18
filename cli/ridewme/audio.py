@@ -28,9 +28,8 @@ class AudioEngine:
                 import simpleaudio as sa
 
                 self._np, self._sa = np, sa
-            except Exception as e:  # pragma: no cover - env-dependent
-                print(f"[audio] disabled (no playback backend: {e}); using console bell.")
-                self.enabled = False
+            except Exception:  # pragma: no cover - env-dependent
+                self.enabled = False   # silent fallback (console bell / browser sound handle it)
 
     def _tone(self, freq: float, ms: float, vol: float):
         np = self._np

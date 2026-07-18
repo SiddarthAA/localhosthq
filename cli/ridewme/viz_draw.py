@@ -46,7 +46,8 @@ def annotate(frame, lms, m):
     h, w = img.shape[:2]
     col = LEVEL_BGR.get(m.get("level", "awake"), LEVEL_BGR["awake"])
 
-    if lms and len(lms) >= 468:
+    # Mesh only while capturing the face (calibration); a clean feed after that.
+    if m.get("show_mesh", False) and lms and len(lms) >= 468:
         pts = [(int(x), int(y)) for (x, y) in lms]
         _delaunay(cv2, img, pts, (70, 95, 70), w, h)         # dim triangulated mesh
         for i in _EMPHASIS:                                  # emphasize eyes + mouth

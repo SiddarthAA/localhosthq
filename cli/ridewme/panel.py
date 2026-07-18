@@ -59,14 +59,22 @@ def render(snap: dict):
         rows.append(Align.center(Text(f"  {flash['msg']}  ", style=flash["style"])))
         rows.append(Text(""))
 
+    driver = snap.get("driver", "driver")
     if not snap.get("calibrated"):
-        pct = int(snap.get("calib_progress", 0.0) * 100)
-        rows += [
-            Align.center(Text("⏳  Calibrating…", style="bold cyan")),
-            Text(""),
-            Align.center(Text("look ahead normally for a few seconds", style="dim")),
-            Align.center(Text(f"[{_bar(pct)}] {pct}%", style="cyan")),
-        ]
+        if snap.get("uptime_s", 0.0) < 3.0:      # greeting → initializing
+            rows += [
+                Align.center(Text(f"Hello, {driver} 👋", style="bold white")),
+                Text(""),
+                Align.center(Text("Initializing trip…", style="cyan")),
+            ]
+        else:                                    # calibrating — hold steady
+            pct = int(snap.get("calib_progress", 0.0) * 100)
+            rows += [
+                Align.center(Text("Calibrating — hold steady", style="bold cyan")),
+                Text(""),
+                Align.center(Text("look ahead normally", style="dim")),
+                Align.center(Text(f"[{_bar(pct)}] {pct}%", style="cyan")),
+            ]
     else:
         gated = snap.get("gated")
         level = snap.get("level", "awake")
@@ -77,6 +85,8 @@ def render(snap: dict):
         score = snap.get("score", 0.0)
         bar_style = {"awake": "green", "notice": "cyan", "warn": "yellow", "alarm": "red"}.get(level, "green")
 
+        rows.append(Align.center(Text("● tracking active", style="dim green")))
+        rows.append(Text(""))
         rows.append(Align.center(Text(f"{glyph}  {msg}", style=style)))
         rows.append(Text(""))
         rows.append(Align.center(Text(f"[{_bar(score)}]  {score:0.0f}", style=bar_style)))
@@ -91,7 +101,7 @@ def render(snap: dict):
     dot = {"online": "green", "degraded": "yellow", "offline": "red"}.get(snap.get("link"), "green")
     footer = Text.assemble(
         (f"● ", dot), ("recording  ", "dim"),
-        (f"{snap.get('driver_id', '?')}  ", "white"),
+        (f"{snap.get('driver', snap.get('driver_id', '?'))}  ", "white"),
         (f"{speed}", "dim"),
         ("   [NAIVE]" if snap.get("naive") else "", "bold red"),
     )

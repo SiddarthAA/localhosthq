@@ -106,7 +106,7 @@ class _Handler(BaseHTTPRequestHandler):
                     self.wfile.write(f"Content-Length: {len(jpeg)}\r\n\r\n".encode())
                     self.wfile.write(jpeg)
                     self.wfile.write(b"\r\n")
-                time.sleep(1 / 15)
+                time.sleep(1 / 25)
         except (BrokenPipeError, ConnectionResetError, ValueError):
             pass
 

@@ -80,6 +80,7 @@ class Daemon:
         self._panel_fired: list = []
         self._panel_flash: tuple | None = None   # (msg, until_ts, style)
         self.viz = None                          # set to a VizState by main when --viz
+        self._last_sensor: dict = {}             # freshest sensor packet (for the viz accel/gyro cards)
 
     # ── shared state ──────────────────────────────────────────────────
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
@@ -105,8 +106,7 @@ class Daemon:
             self.outbox.put(hello["session_id"], hello["seq"], E.to_wire(hello))
         self.uplink.start(hello)   # (re)registers the session's pubkey on every connect
 
-        print(f"[daemon] session={self.session_id} driver={self.cfg.driver_id} "
-              f"uplink={self.cfg.ingest_ws_url} naive={self.naive is not None}")
+        print(f"ridewme · {self.cfg.driver_name} · session {self.session_id}")
 
         for target, name in ((self._camera_loop, "camera"), (self._sensor_loop, "sensor"),
                              (self._heartbeat_loop, "heartbeat")):
@@ -144,7 +144,8 @@ class Daemon:
         if self._panel_flash and now < self._panel_flash[1]:
             flash = {"msg": self._panel_flash[0], "style": self._panel_flash[2]}
         return {
-            "driver_id": self.cfg.driver_id, "session_id": self.session_id,
+            "driver_id": self.cfg.driver_id, "driver": self.cfg.driver_name,
+            "session_id": self.session_id, "uptime_s": now - self._start_t,
             "calibrated": self.calib.ready, "calib_progress": self.calib.progress(now),
             "level": self._panel_level, "score": self._panel_score, "gated": self._panel_gated,
             "fired": self._panel_fired, "speed_mps": self.motion.get().speed_mps,
@@ -170,6 +171,10 @@ class Daemon:
             "fired": trust.fired, "agree_count": trust.agree_count,
             "fps": _r(self._fps, 1), "duty": self._duty_state,
             "speed_mps": self.motion.get().speed_mps, "link": self.uplink.mode, "crash": crash,
+            "driver": self.cfg.driver_name,
+            "show_mesh": not baseline.ready,       # mesh only while capturing/calibrating the face
+            "accel": self._last_sensor.get("accel") or self._last_sensor.get("accelG"),  # linear (~0-centered)
+            "gyro": self._last_sensor.get("gyro"),
         }
 
     def shutdown(self) -> None:
@@ -235,8 +240,9 @@ class Daemon:
                 vf, lms = self.fsrc.viz_frame() if hasattr(self.fsrc, "viz_frame") else (None, [])
                 self.viz.update(vf, lms, self._viz_metrics(esc, trust, sig, baseline, gated))
             duty = self.duty.update(trust.score, trust.agree_count, ts)  # L6
-            target_fps = duty.target_fps
             self._duty_state = duty.state
+            # duty still governs compute; --viz paces full-rate for a smooth demo feed.
+            target_fps = self.t.viz_fps if self.viz is not None else duty.target_fps
 
             self._maybe_emit_drowsiness(esc, trust, sig, baseline, gated, reason, ts)
             self._pace(loop_start, target_fps)
@@ -301,6 +307,7 @@ class Daemon:
                 src = pkt.get("t")
                 ts = src / 1000.0 if isinstance(src, (int, float)) else time.time()
                 self.crash.ingest(pkt, ts)
+                self._last_sensor = pkt             # freshest packet for the viz accel/gyro cards
             self.crash.tick(time.time())            # Layer 2 eval + Layer 3 countdown
             self._stop.wait(0.02)                   # ~50 Hz (crashes peak <100 ms)
 

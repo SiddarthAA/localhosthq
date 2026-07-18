@@ -7,10 +7,35 @@ are imported lazily so the decision core and its tests never need them.
 
 from __future__ import annotations
 
+import contextlib
+import os
 import urllib.request
 from pathlib import Path
 
 from .signals import RawFeatures
+
+# Quiet MediaPipe / TF-Lite / glog before they load (must be set pre-import).
+os.environ.setdefault("GLOG_minloglevel", "3")
+os.environ.setdefault("GLOG_logtostderr", "0")
+os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
+
+
+@contextlib.contextmanager
+def _quiet_native_stderr():
+    """Silence C++ (glog/absl/TF-Lite) chatter written straight to fd 2 during init."""
+    try:
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        saved = os.dup(2)
+        os.dup2(devnull, 2)
+    except OSError:
+        yield
+        return
+    try:
+        yield
+    finally:
+        os.dup2(saved, 2)
+        os.close(devnull)
+        os.close(saved)
 
 MODEL_URL = (
     "https://storage.googleapis.com/mediapipe-models/face_landmarker/"
@@ -92,7 +117,8 @@ class FaceMeshDetector:
             output_face_blendshapes=True,
             output_facial_transformation_matrixes=True,
         )
-        self._detector = vision.FaceLandmarker.create_from_options(opts)
+        with _quiet_native_stderr():   # hide glog/absl/XNNPACK init spam
+            self._detector = vision.FaceLandmarker.create_from_options(opts)
         self.landmarks_px: list = []   # last frame's 478 landmark pixel points (for --viz overlay)
 
     def detect(self, frame_bgr, ts_ms: int) -> RawFeatures:

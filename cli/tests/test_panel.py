@@ -25,8 +25,12 @@ def test_alert_is_calm():
     assert "alert" in _text(BASE)
 
 
+def test_greeting_on_boot():
+    assert "hello" in _text({**BASE, "calibrated": False, "uptime_s": 0.5, "driver": "sidd"})
+
+
 def test_calibrating():
-    assert "calibrat" in _text({**BASE, "calibrated": False, "calib_progress": 0.4})
+    assert "calibrat" in _text({**BASE, "calibrated": False, "calib_progress": 0.4, "uptime_s": 5.0})
 
 
 def test_warn_shows_plain_language_why():

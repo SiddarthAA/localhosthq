@@ -78,6 +78,7 @@ class Tuning:
     # L6 — adaptive duty-cycle
     fps_full: int = 15
     fps_idle: int = 3
+    viz_fps: int = 20                           # --viz runs full-rate for a smooth demo feed
     idle_score: float = 8.0                     # below this + no fired signals = candidate for idle
     idle_grace_s: float = 5.0                   # must stay quiet this long before dropping fps
 
@@ -126,6 +127,7 @@ class Config:
     backend_host: str = "127.0.0.1"
     backend_port: int = 8080
     driver_id: str = "driver-1"
+    driver_name: str = "driver-1"                # friendly name for the CLI greeting
     ingest_token: str = ""
     camera_source: str = "phone"                 # phone | replay
     replay_video: str = ""
@@ -152,12 +154,14 @@ class Config:
 
 def load_config() -> Config:
     _load_dotenv()
+    driver_id = os.getenv("DRIVER_ID", "driver-1")
     return Config(
         sensor_host=os.getenv("SENSOR_HOST", "shawarma.chipmunk-balance.ts.net"),
         sensor_port=int(os.getenv("SENSOR_PORT", "8000")),
         backend_host=os.getenv("BACKEND_HOST", "127.0.0.1"),
         backend_port=int(os.getenv("BACKEND_PORT", "8080")),
-        driver_id=os.getenv("DRIVER_ID", "driver-1"),
+        driver_id=driver_id,
+        driver_name=os.getenv("DRIVER_NAME", driver_id),
         ingest_token=os.getenv("INGEST_TOKEN", ""),
         camera_source=os.getenv("CAMERA_SOURCE", "phone").strip().lower(),
         replay_video=os.getenv("REPLAY_VIDEO", ""),
