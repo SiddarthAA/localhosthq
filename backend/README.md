@@ -7,8 +7,9 @@ does this go?" reduces to: raw data or judgment → daemon; storage/relay → he
 ## Run
 
 ```bash
-../setup.sh          # one-time: shared root .venv + deps
-./run.sh             # serves 0.0.0.0:${BACKEND_PORT:-8080}
+../setup.sh                                # one-time: shared root .venv + deps
+(cd ../database && docker compose up -d)   # start the Postgres ledger (see ../database/)
+./run.sh                                   # serves 0.0.0.0:${BACKEND_PORT:-8080}
 ```
 
 ## API — see [`../CONTRACT.md`](../CONTRACT.md) §5 (build the frontend against this)
@@ -23,8 +24,10 @@ does this go?" reduces to: raw data or judgment → daemon; storage/relay → he
 | GET | `/api/drivers/{id}/ledger/verify` | chain verification (the tamper demo) |
 | GET | `/api/drivers/{id}/ledger` | raw signed chain for the log view |
 
-Ledger: SQLite + Ed25519 signature chain (`ridewme_backend/ledger.py`). Verification is
-recomputed from stored bytes, so editing any row makes `…/ledger/verify` report the broken seq.
+Ledger: **Postgres** + Ed25519 signature chain (`ridewme_backend/ledger.py`; local Docker via
+[`../database/`](../database/), managed cloud later — same schema, different `DATABASE_URL`).
+Verification is recomputed from stored bytes, so editing any row makes `…/ledger/verify` report
+the broken seq.
 
 ## Tests
 

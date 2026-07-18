@@ -103,11 +103,14 @@ ok, frame, sensors = cam.read()
 ---
 
 ## Setup / conventions
-- **Project name:** `ridewme` (working name; the ridewme brief above is the product spec — same system, renamed).
+- **Project name:** `ridewme` — the product brief above is the spec.
 - **Package manager: `uv`** everywhere. Mirror the sensor-app convention:
   `uv venv .venv --python 3.12` then `uv pip install -r requirements.txt`.
 - **backend/ + cli/ share ONE uv venv** at the repo root (`.venv/`). Both install their `requirements.txt` into it:
   `uv pip install -r backend/requirements.txt -r cli/requirements.txt` (activate `./.venv`).
+- **Database (`database/`):** the backend ledger is **Postgres**, run locally via Docker
+  (`cd database && docker compose up -d`). Backend reads `DATABASE_URL` from `.env`. Swap the host
+  for managed Postgres (Supabase) at deploy time — same schema, different DSN. Backend Docker image: later.
 - **frontend/** is the default Vite React-TS template — `cd frontend && npm install && npm run dev`.
 - **sensor-app/** is already set up and **must not be touched**; consume it per the reference above.
 

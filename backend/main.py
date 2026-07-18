@@ -19,7 +19,8 @@ def main() -> None:
 
     cfg = load_config()
     app = create_app(cfg)
-    print(f"[backend] serving http://{cfg.host}:{cfg.port}  ledger={cfg.ledger_db}")
+    db = cfg.database_url.rsplit("@", 1)[-1]  # redact credentials in logs
+    print(f"[backend] serving http://{cfg.host}:{cfg.port}  db=postgres://…@{db}")
     uvicorn.run(app, host=cfg.host, port=cfg.port, log_level="info")
 
 

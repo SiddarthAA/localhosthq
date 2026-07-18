@@ -27,7 +27,7 @@ def create_app(cfg: Config | None = None) -> FastAPI:
         CORSMiddleware, allow_origins=cfg.cors_origins,
         allow_methods=["*"], allow_headers=["*"],
     )
-    ledger = Ledger(cfg.ledger_db)
+    ledger = Ledger(cfg.database_url)
     state = StateStore(cfg.online_timeout_s)
     hub = Hub()
     app.state.cfg, app.state.ledger, app.state.state, app.state.hub = cfg, ledger, state, hub

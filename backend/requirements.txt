@@ -4,3 +4,4 @@ uvicorn[standard]>=0.29
 websockets>=12
 pynacl>=1.5
 python-dotenv>=1.0
+psycopg[binary]>=3.1        # Postgres driver (local Docker now, managed cloud later)

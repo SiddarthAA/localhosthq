@@ -8,6 +8,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
+DEFAULT_DSN = "postgresql://ridewme:ridewme@127.0.0.1:5432/ridewme"
+
 
 def _load_dotenv() -> None:
     try:
@@ -23,7 +25,7 @@ def _load_dotenv() -> None:
 class Config:
     host: str = "0.0.0.0"
     port: int = 8080
-    ledger_db: str = str(REPO_ROOT / "backend" / "ridewme.db")
+    database_url: str = DEFAULT_DSN     # local Docker Postgres now, managed cloud later
     ingest_token: str = ""
     cors_origins: list[str] = None  # type: ignore
     online_timeout_s: float = 15.0
@@ -35,14 +37,11 @@ class Config:
 
 def load_config() -> Config:
     _load_dotenv()
-    db = os.getenv("LEDGER_DB", str(REPO_ROOT / "backend" / "ridewme.db"))
-    if not Path(db).is_absolute():
-        db = str(REPO_ROOT / db)
     origins = [o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()]
     return Config(
         host=os.getenv("BACKEND_BIND", "0.0.0.0"),
         port=int(os.getenv("BACKEND_PORT", "8080")),
-        ledger_db=db,
+        database_url=os.getenv("DATABASE_URL", DEFAULT_DSN),
         ingest_token=os.getenv("INGEST_TOKEN", ""),
         cors_origins=origins or ["*"],
     )

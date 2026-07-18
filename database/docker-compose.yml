@@ -1,0 +1,33 @@
+# Local Postgres for the ridewme backend ledger.
+# Cloud (managed Postgres / Supabase) comes later — same schema, just a different DATABASE_URL.
+#
+#   cd database && docker compose up -d      # start
+#   docker compose down                      # stop (keeps data)
+#   docker compose down -v                   # stop + wipe the ledger volume
+#
+# Backend connects with DATABASE_URL (repo-root .env), default matches the creds below.
+
+name: ridewme
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: ridewme-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ridewme}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ridewme}
+      POSTGRES_DB: ${POSTGRES_DB:-ridewme}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - ridewme_pgdata:/var/lib/postgresql/data
+      - ./init:/docker-entrypoint-initdb.d:ro   # schema auto-applied on first boot
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ridewme} -d ${POSTGRES_DB:-ridewme}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  ridewme_pgdata:
