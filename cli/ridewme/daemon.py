@@ -79,6 +79,7 @@ class Daemon:
         self._panel_gated = False
         self._panel_fired: list = []
         self._panel_flash: tuple | None = None   # (msg, until_ts, style)
+        self.viz = None                          # set to a VizState by main when --viz
 
     # ── shared state ──────────────────────────────────────────────────
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
@@ -151,6 +152,26 @@ class Daemon:
             "naive": self.naive is not None,
         }
 
+    def _viz_metrics(self, esc, trust, sig, baseline, gated) -> dict:
+        """Full engine state for the --viz debug visualizer."""
+        inc = self.crash.active_incident
+        crash = None
+        if inc is not None:
+            crash = {"status": inc.status, "severity": inc.severity, "peak_g": inc.peak_g,
+                     "countdown_s": max(0.0, inc.deadline - time.time())}
+        return {
+            "level": esc.level, "score": _r(trust.score, 1), "gated": gated,
+            "calibrated": baseline.ready, "calib_progress": _r(self.calib.progress(time.time()), 2),
+            "signals": {
+                "ear": _r(sig.ear) if sig.ear is not None else None, "perclos": _r(sig.perclos),
+                "blink_rate": _r(sig.blink_rate, 1), "blink_dur_ms": _r(sig.blink_dur_ms, 0),
+                "head_nod": _r(trust.dangers.get("head_nod", 0.0)), "yawn": _r(trust.dangers.get("yawn", 0.0)),
+            },
+            "fired": trust.fired, "agree_count": trust.agree_count,
+            "fps": _r(self._fps, 1), "duty": self._duty_state,
+            "speed_mps": self.motion.get().speed_mps, "link": self.uplink.mode, "crash": crash,
+        }
+
     def shutdown(self) -> None:
         self._stop.set()
         self.audio.stop()
@@ -190,6 +211,14 @@ class Daemon:
                 self._panel_score = 100.0 if level == E.ALARM else 0.0
                 self._panel_fired = ["naive"] if level == E.ALARM else []
                 self._emit_naive(level, raw, ts)
+                if self.viz is not None:
+                    vf, lms = self.fsrc.viz_frame() if hasattr(self.fsrc, "viz_frame") else (None, [])
+                    self.viz.update(vf, lms, {
+                        "level": level, "score": 100.0 if level == E.ALARM else 0.0,
+                        "calibrated": True, "fired": ["naive"] if level == E.ALARM else [],
+                        "agree_count": 1, "fps": _r(self._fps, 1), "duty": self._duty_state,
+                        "link": self.uplink.mode, "crash": None,
+                        "signals": {"ear": _r(raw.ear) if raw.ear is not None else None}})
                 self._pace(loop_start, self.t.fps_full)
                 continue
 
@@ -202,6 +231,9 @@ class Daemon:
             self.audio.on_escalation(esc.effective_level, esc.audio_intensity)
             self._panel_level, self._panel_score = esc.level, trust.score
             self._panel_gated, self._panel_fired = gated, trust.fired
+            if self.viz is not None:
+                vf, lms = self.fsrc.viz_frame() if hasattr(self.fsrc, "viz_frame") else (None, [])
+                self.viz.update(vf, lms, self._viz_metrics(esc, trust, sig, baseline, gated))
             duty = self.duty.update(trust.score, trust.agree_count, ts)  # L6
             target_fps = duty.target_fps
             self._duty_state = duty.state

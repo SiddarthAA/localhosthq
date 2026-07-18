@@ -55,6 +55,8 @@ def main() -> None:
     ap.add_argument("--backend-host", help="override BACKEND_HOST")
     ap.add_argument("--no-audio", action="store_true", help="disable in-cabin audio")
     ap.add_argument("--panel", action="store_true", help="live in-cabin driver panel (needs a TTY)")
+    ap.add_argument("--viz", action="store_true", help="serve the engine X-ray visualizer (annotated video + metrics)")
+    ap.add_argument("--viz-port", type=int, default=8090, help="visualizer port (default 8090)")
     ap.add_argument("--crash-at", type=float, default=55.0, help="[--sim] crash time in seconds")
     args = ap.parse_args()
 
@@ -72,6 +74,17 @@ def main() -> None:
     daemon = Daemon(cfg, fsrc, ssrc)
     threading.Thread(target=_console_listener, args=(daemon,), daemon=True).start()
 
+    viz_server = None
+    if args.viz:
+        import socket
+
+        from ridewme.viz_server import VizServer, VizState
+        viz = VizState()
+        daemon.viz = viz
+        viz_server = VizServer(viz, port=args.viz_port)
+        viz_server.start()
+        print(f"[viz] engine X-ray -> http://{socket.gethostname()}:{args.viz_port}/  (open on the tailnet)")
+
     if args.panel:
         from ridewme.panel import DriverPanel
         daemon.start()
@@ -81,8 +94,14 @@ def main() -> None:
             pass
         finally:
             daemon.shutdown()
+            if viz_server:
+                viz_server.stop()
     else:
-        daemon.run()
+        try:
+            daemon.run()
+        finally:
+            if viz_server:
+                viz_server.stop()
 
 
 if __name__ == "__main__":

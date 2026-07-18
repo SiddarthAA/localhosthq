@@ -76,14 +76,19 @@ class PhoneFeatureSource:
         self._reader = _FreshestFrame(cfg.sensor_mjpeg_url)
         self._det = FaceMeshDetector(cfg.model_path)
         self._t0 = time.time()
+        self.last_frame = None
 
     def read(self):
         frame = self._reader.latest()
         now = time.time()
         if frame is None:
             return (False, None, now)
+        self.last_frame = frame
         raw = self._det.detect(frame, int((now - self._t0) * 1000))
         return (True, raw, now)
+
+    def viz_frame(self):
+        return (self.last_frame, self._det.landmarks_px)
 
     def close(self):
         self._reader.close()
@@ -103,6 +108,7 @@ class ReplayFeatureSource:
         self._det = FaceMeshDetector(cfg.model_path)
         self._n = 0
         self._fps = self._cap.get(cv2.CAP_PROP_FPS) or 15.0
+        self.last_frame = None
 
     def read(self):
         ok, frame = self._cap.read()
@@ -112,8 +118,12 @@ class ReplayFeatureSource:
             if not ok:
                 return (False, None, time.time())
         self._n += 1
+        self.last_frame = frame
         raw = self._det.detect(frame, int(self._n / self._fps * 1000))
         return (True, raw, time.time())
+
+    def viz_frame(self):
+        return (self.last_frame, self._det.landmarks_px)
 
     def close(self):
         self._cap.release()
@@ -147,6 +157,9 @@ class SyntheticFeatureSource:
         else:                            # recovery
             ear = closed_ear if (e % 3.0) < 0.15 else open_ear
         return (True, RawFeatures(face_present=True, ear=ear, mar=mar, pitch_deg=pitch), time.time())
+
+    def viz_frame(self):
+        return (None, [])          # synthetic has no video; --viz shows a placeholder
 
     def close(self):
         pass

@@ -12,7 +12,15 @@ video and raw sensors never leave it. See [`../CONTRACT.md`](../CONTRACT.md) for
 ./run.sh                   # production: phone camera + sensors (needs sensor-app up)
 ./run.sh --naive           # strawman per-blink detector (side-by-side demo contrast)
 ./run.sh --replay clip.mp4 # drive frames from a local video file
+./run.sh --viz             # + engine X-ray web visualizer on :8090 (annotated video + graphs)
+./run.sh --panel           # + in-cabin driver panel (TTY)
 ```
+
+**Engine X-ray (`--viz`)** — a browser visualizer served *from the edge* for demos: the annotated
+live face mesh + a fatigue gauge, signal bars, live charts, crash countdown, and browser sound.
+Open `http://<host>:8090/` on the tailnet. It's a **debug/demo view** (annotated video leaves the
+edge only here) — the production fleet path still emits signed events only. Files: `viz_server.py`,
+`viz_draw.py`, `viz.html`.
 
 Operational config is in the repo-root `.env` (`SENSOR_HOST`, `BACKEND_HOST`, `DRIVER_ID`, …).
 Engine tuning (thresholds, windows, time-constants) is documented in `ridewme/config.py`.

@@ -93,6 +93,7 @@ class FaceMeshDetector:
             output_facial_transformation_matrixes=True,
         )
         self._detector = vision.FaceLandmarker.create_from_options(opts)
+        self.landmarks_px: list = []   # last frame's 478 landmark pixel points (for --viz overlay)
 
     def detect(self, frame_bgr, ts_ms: int) -> RawFeatures:
         import cv2
@@ -102,10 +103,12 @@ class FaceMeshDetector:
         mp_image = self._mp.Image(image_format=self._mp.ImageFormat.SRGB, data=rgb)
         res = self._detector.detect_for_video(mp_image, int(ts_ms))
         if not res.face_landmarks:
+            self.landmarks_px = []
             return RawFeatures(face_present=False, ear=0.0, mar=0.0, pitch_deg=0.0)
 
         lm = res.face_landmarks[0]
         pts = [(p.x * w, p.y * h) for p in lm]
+        self.landmarks_px = pts
         ear = 0.5 * (_ear(pts, _RIGHT_EYE) + _ear(pts, _LEFT_EYE))
         mar = _mar(pts)
         pitch = (
