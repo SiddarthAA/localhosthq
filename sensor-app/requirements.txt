@@ -1,0 +1,7 @@
+# Server (shawarma) needs all of these.
+# Consumer (chutney) only needs: numpy, opencv-python, websocket-client
+fastapi>=0.110
+uvicorn[standard]>=0.29
+numpy>=1.26
+opencv-python>=4.9
+websocket-client>=1.7

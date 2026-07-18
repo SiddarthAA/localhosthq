@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>sensor-app · emitter</title>
+<link rel="stylesheet" href="/ui.css" />
+<style>
+  .wrap { position: relative; z-index: 1; max-width: 520px; margin: 0 auto; padding: 20px 16px 48px; }
+  .top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .brand { font-size: 15px; font-weight: 650; letter-spacing: .2px; }
+  .brand span { color: hsl(var(--muted)); font-weight: 500; }
+  #toggle { width: 100%; }
+  .videocard { margin-top: 14px; overflow: hidden; }
+  video { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: #000; display: block; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 14px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+  .wide { grid-column: 1 / -1; }
+  pre#log { margin: 14px 0 0; padding: 10px 12px; max-height: 130px; overflow: auto;
+            font-size: 11px; line-height: 1.55; color: hsl(var(--muted)); white-space: pre-wrap; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="brand">sensor-app <span>· emitter</span></div>
+      <span id="badge" class="badge"><i class="dot"></i><span id="badgeText">idle</span></span>
+    </div>
+
+    <button id="toggle" class="btn btn-primary btn-lg">Start streaming</button>
+
+    <div class="card videocard">
+      <video id="cam" playsinline muted></video>
+    </div>
+
+    <div class="grid3">
+      <div class="stat card"><div class="k">fps</div><div class="v mono" id="m_fps">0</div></div>
+      <div class="stat card"><div class="k">camera</div><div class="v mono" id="m_cam">—</div></div>
+      <div class="stat card"><div class="k">sensor pkts</div><div class="v mono" id="m_pkts">0</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="stat card"><div class="k">compass °</div><div class="v mono" id="m_compass">—</div></div>
+      <div class="stat card"><div class="k">frames</div><div class="v mono" id="m_frames">0</div></div>
+      <div class="stat card wide"><div class="k">gyro α,β,γ (°/s)</div><div class="v mono" id="m_gyro">—</div></div>
+      <div class="stat card wide"><div class="k">accel +g x,y,z (m/s²)</div><div class="v mono" id="m_accel">—</div></div>
+      <div class="stat card wide"><div class="k">gps lat,lon</div><div class="v mono" id="m_gps">—</div></div>
+    </div>
+
+    <pre id="log" class="card"></pre>
+  </div>
+
+  <canvas id="work" style="display:none"></canvas>
+  <script src="/app.js"></script>
+</body>
+</html>
