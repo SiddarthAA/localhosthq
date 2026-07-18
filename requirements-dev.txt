@@ -1,0 +1,2 @@
+# Dev/test tooling for the shared root .venv.
+pytest>=8.0

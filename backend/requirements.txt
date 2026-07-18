@@ -1,4 +1,6 @@
-# backend — thin FastAPI relay hub (no CV, no decisions). Installs into the shared root .venv.
+# backend — thin FastAPI relay hub + tamper-evident ledger. Installs into the shared root .venv.
 fastapi>=0.110
 uvicorn[standard]>=0.29
 websockets>=12
+pynacl>=1.5
+python-dotenv>=1.0

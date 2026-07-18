@@ -1,21 +1,27 @@
-"""ridewme backend — thin FastAPI relay hub (dumb relay + ledger, no CV, no decisions).
+"""ridewme backend — entrypoint. Dumb relay + tamper-evident ledger.
 
-Barebones skeleton: app instance, a /health route, and a placeholder WebSocket stub.
-Wiring (event ingest, audit ledger, fleet broadcast) comes later.
+    python backend/main.py        # serves 0.0.0.0:${BACKEND_PORT:-8080}
 """
 
-from fastapi import FastAPI, WebSocket
+from __future__ import annotations
 
-app = FastAPI(title="ridewme-backend")
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))  # make `ridewme_backend` importable
+
+from ridewme_backend.app import create_app  # noqa: E402
+from ridewme_backend.config import load_config  # noqa: E402
 
 
-@app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+def main() -> None:
+    import uvicorn
+
+    cfg = load_config()
+    app = create_app(cfg)
+    print(f"[backend] serving http://{cfg.host}:{cfg.port}  ledger={cfg.ledger_db}")
+    uvicorn.run(app, host=cfg.host, port=cfg.port, log_level="info")
 
 
-@app.websocket("/ws")
-async def ws_stub(websocket: WebSocket) -> None:
-    # Placeholder stub — accepts then closes. No relay/ledger wiring yet.
-    await websocket.accept()
-    await websocket.close()
+if __name__ == "__main__":
+    main()

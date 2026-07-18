@@ -103,7 +103,7 @@ ok, frame, sensors = cam.read()
 ---
 
 ## Setup / conventions
-- **Project name:** `ridewme` (working name; the DriveGuard brief above is the product spec — same system, renamed).
+- **Project name:** `ridewme` (working name; the ridewme brief above is the product spec — same system, renamed).
 - **Package manager: `uv`** everywhere. Mirror the sensor-app convention:
   `uv venv .venv --python 3.12` then `uv pip install -r requirements.txt`.
 - **backend/ + cli/ share ONE uv venv** at the repo root (`.venv/`). Both install their `requirements.txt` into it:

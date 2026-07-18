@@ -6,4 +6,17 @@ __pycache__/
 # Node
 node_modules/
 
+# Secrets & local config
+.env
+
+# Edge daemon: private signing key + downloaded model weights
+cli/keys/
+cli/models/
+*.key
+
+# Backend: SQLite ledger
+*.db
+*.db-journal
+*.db-wal
+
 .DS_Store
