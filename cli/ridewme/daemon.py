@@ -231,7 +231,10 @@ class Daemon:
             sig = self.extractor.update(raw, ts, baseline)  # L1
             trust = self.trust.update(sig, baseline, dt)    # L3
             self.fatigue.update(ts, trust.score)            # feed the crash-correlation history
-            gated, reason = self.gate.evaluate(self.motion.moving_for_gate(ts))  # L4 (Seam 1)
+            if self.cfg.context_gate:                       # L4 (Seam 1) — off by default, always tracks
+                gated, reason = self.gate.evaluate(self.motion.moving_for_gate(ts))
+            else:
+                gated, reason = False, None
             esc = self.esc.update(trust.score, dt, gated)   # L5
             self.audio.on_escalation(esc.effective_level, esc.audio_intensity)
             self._panel_level, self._panel_score = esc.level, trust.score

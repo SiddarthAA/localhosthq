@@ -133,6 +133,8 @@ class Config:
     replay_video: str = ""
     audio_enabled: bool = True
     naive_mode: bool = False
+    context_gate: bool = False                   # L4 "don't nag a parked driver"; off by default
+                                                 # (set CONTEXT_GATE=true for on-road production)
     key_path: str = str(REPO_ROOT / "cli" / "keys" / "driver.key")
     model_path: str = str(REPO_ROOT / "cli" / "models" / "face_landmarker.task")
     outbox_path: str = str(REPO_ROOT / "cli" / "outbox.db")   # durable edge store-and-forward
@@ -167,4 +169,5 @@ def load_config() -> Config:
         replay_video=os.getenv("REPLAY_VIDEO", ""),
         audio_enabled=_b("AUDIO_ENABLED", True),
         naive_mode=_b("NAIVE_MODE", False),
+        context_gate=_b("CONTEXT_GATE", False),
     )
