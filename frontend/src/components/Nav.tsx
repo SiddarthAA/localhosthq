@@ -49,7 +49,7 @@ export default function Nav() {
       <div className="nav__contact">
         <a href="mailto:hello@ridewme.io">hello@ridewme.io</a>
         {/* wire to real auth later — for now routes to the dashboard */}
-        <a className="nav__demo" href="/dashboard">
+        <a className="nav__demo" href="/login">
           Login
         </a>
       </div>

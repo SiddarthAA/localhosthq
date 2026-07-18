@@ -1,34 +1,47 @@
-import { useSite } from './lib/site'
-import Nav from './components/Nav'
-import BookPill from './components/BookPill'
-import Hero from './components/Hero'
-import Statement from './components/Statement'
-import Pillars from './components/Pillars'
-import Engine from './components/Engine'
-import Crash from './components/Crash'
-import SmarterSystem from './components/SmarterSystem'
-import Reach from './components/Reach'
-import FooterCTA from './components/FooterCTA'
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { lazy, Suspense, type ReactNode } from 'react'
+import Landing from './routes/Landing'
+import { isAuthed } from './lib/auth'
+
+// code-split the app views so the landing stays light (no recharts/shadcn)
+const Login = lazy(() => import('./routes/Login'))
+const Dashboard = lazy(() => import('./routes/Dashboard'))
+
+function Fallback() {
+  return (
+    <div className="min-h-svh bg-background" style={{ background: '#0b0807' }} />
+  )
+}
+
+function Protected({ children }: { children: ReactNode }) {
+  return isAuthed() ? <>{children}</> : <Navigate to="/login" replace />
+}
 
 export default function App() {
-  useSite()
   return (
-    <>
-      <a className="skip-link" href="#intro">
-        Skip to content
-      </a>
-      <Nav />
-      <main>
-        <Hero />
-        <Statement />
-        <Pillars />
-        <Engine />
-        <Crash />
-        <SmarterSystem />
-        <Reach />
-        <FooterCTA />
-      </main>
-      <BookPill />
-    </>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<Fallback />}>
+              <Login />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Protected>
+              <Suspense fallback={<Fallback />}>
+                <Dashboard />
+              </Suspense>
+            </Protected>
+          }
+        />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   )
 }

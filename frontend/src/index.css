@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   shadcn theme — brand-matched (dark, sharp 2px, teal primary)
+   Variable names are shadcn's; values are the RidewMe palette.
+   ============================================================ */
+:root {
+  --radius: 0.125rem; /* 2px — sharp */
+
+  --background: #0b0807;
+  --foreground: #f3eee3;
+
+  --card: #16110f;
+  --card-foreground: #f3eee3;
+  --popover: #17110f;
+  --popover-foreground: #f3eee3;
+
+  --primary: #6fe0c4;
+  --primary-foreground: #06110c;
+
+  --secondary: #1e1613;
+  --secondary-foreground: #f3eee3;
+
+  --muted: #1a1512;
+  --muted-foreground: #948a82;
+
+  --accent: #211814;
+  --accent-foreground: #f3eee3;
+
+  --destructive: #ff5148;
+  --destructive-foreground: #f3eee3;
+
+  --success: #6fe0c4;
+  --warning: #f5c451;
+
+  --border: #2a221e;
+  --input: #2a221e;
+  --ring: #6fe0c4;
+
+  --chart-1: #6fe0c4;
+  --chart-2: #7c9cff;
+  --chart-3: #ff5148;
+  --chart-4: #f5c451;
+  --chart-5: #b487f0;
+
+  --sidebar: #100b0a;
+  --sidebar-foreground: #f3eee3;
+  --sidebar-primary: #6fe0c4;
+  --sidebar-primary-foreground: #06110c;
+  --sidebar-accent: #1e1613;
+  --sidebar-accent-foreground: #f3eee3;
+  --sidebar-border: #2a221e;
+  --sidebar-ring: #6fe0c4;
+}
+
+@theme inline {
+  --radius-sm: 2px;
+  --radius-md: 2px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: "Archivo", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+/* only affects elements that opt into Tailwind utilities (dashboard/login);
+   the landing's unlayered CSS always wins over these @layer rules */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+}

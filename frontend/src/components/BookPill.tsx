@@ -17,7 +17,7 @@ export default function BookPill() {
   }, [])
 
   return (
-    <a className={`bookpill${hidden ? ' bookpill--hidden' : ''}`} href="/dashboard">
+    <a className={`bookpill${hidden ? ' bookpill--hidden' : ''}`} href="/login">
       <span className="bookpill__dot" aria-hidden="true" />
       Login
     </a>
