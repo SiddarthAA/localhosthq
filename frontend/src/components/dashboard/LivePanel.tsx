@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react'
 import { Area, AreaChart, ResponsiveContainer, YAxis } from 'recharts'
 import { AlertTriangle, Gauge, Zap } from 'lucide-react'
 import { useLive } from '@/lib/useLive'
-import { liveSim } from '@/lib/data'
+import { liveSource } from '@/lib/fleet'
+import { useMode } from '@/lib/hooks'
 import type { DriverState, SignalKey } from '@/lib/types'
 import FatigueGauge from './FatigueGauge'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,7 @@ const SIGS: { key: SignalKey; label: string; read: (s: DriverState) => string; f
 
 export default function LivePanel() {
   const d = useLive()
+  const [mode] = useMode()
   const [buf, setBuf] = useState<{ i: number; score: number }[]>([])
   const [naive, setNaive] = useState(false)
 
@@ -107,22 +109,29 @@ export default function LivePanel() {
             })}
           </div>
 
-          {/* demo controls */}
-          <div className="flex flex-wrap gap-2 border-t border-border pt-4">
-            <Button size="sm" variant="secondary" onClick={() => liveSim.pushDrowsy()}>
-              <Zap className="size-3.5" /> Simulate drowsiness
-            </Button>
-            <Button size="sm" variant="secondary" onClick={() => liveSim.triggerCrash('severe')}>
-              <AlertTriangle className="size-3.5" /> Trigger crash
-            </Button>
-            <Button
-              size="sm"
-              variant={naive ? 'destructive' : 'outline'}
-              onClick={() => { const n = !naive; setNaive(n); liveSim.setNaive(n) }}
-            >
-              {naive ? 'Naive: ON (spams)' : 'Naive mode'}
-            </Button>
-          </div>
+          {/* demo controls — only in the offline seeded demo; real driver drives live/alerts */}
+          {mode === 'seeded' ? (
+            <div className="flex flex-wrap gap-2 border-t border-border pt-4">
+              <Button size="sm" variant="secondary" onClick={() => liveSource.pushDrowsy()}>
+                <Zap className="size-3.5" /> Simulate drowsiness
+              </Button>
+              <Button size="sm" variant="secondary" onClick={() => liveSource.triggerCrash('severe')}>
+                <AlertTriangle className="size-3.5" /> Trigger crash
+              </Button>
+              <Button
+                size="sm"
+                variant={naive ? 'destructive' : 'outline'}
+                onClick={() => { const n = !naive; setNaive(n); liveSource.setNaive(n) }}
+              >
+                {naive ? 'Naive: ON (spams)' : 'Naive mode'}
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 border-t border-border pt-4 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+              <span className="size-1.5 rounded-full" style={{ background: mode === 'alerts' ? '#f5c451' : '#6fe0c4' }} />
+              {mode === 'alerts' ? 'alerts-only · live telemetry paused' : 'live from edge daemon'}
+            </div>
+          )}
         </div>
       </div>
     </section>

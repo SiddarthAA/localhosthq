@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ShieldAlert, ShieldCheck, FileWarning } from 'lucide-react'
-import { getHistory } from '@/lib/data'
+import { useHistory } from '@/lib/hooks'
 import Panel from './Panel'
 import { Button } from '@/components/ui/button'
 
@@ -8,7 +8,7 @@ const BROKEN_AT = 137
 const fmtT = (ts: number) => new Date(ts).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
 
 export default function Ledger() {
-  const { ledger, kpis } = getHistory()
+  const { ledger, kpis } = useHistory()
   const [tampered, setTampered] = useState(false)
   const rows = [...ledger].reverse()
 

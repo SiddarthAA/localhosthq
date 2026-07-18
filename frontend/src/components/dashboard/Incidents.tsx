@@ -1,5 +1,5 @@
 import { AlertTriangle, ChevronRight } from 'lucide-react'
-import { getHistory } from '@/lib/data'
+import { useHistory } from '@/lib/hooks'
 import type { Severity } from '@/lib/types'
 import Panel from './Panel'
 
@@ -7,7 +7,7 @@ const SEV_HEX: Record<Severity, string> = { minor: '#6fe0c4', moderate: '#f5c451
 const fmt = (ts: number) => new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
 
 export default function Incidents() {
-  const { incidents } = getHistory()
+  const { incidents } = useHistory()
   const confirmed = incidents.filter((i) => i.status === 'confirmed').length
   return (
     <Panel

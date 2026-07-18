@@ -1,7 +1,7 @@
-import { getHistory } from '@/lib/data'
+import { useHistory } from '@/lib/hooks'
 
 export default function Kpis() {
-  const { kpis } = getHistory()
+  const { kpis } = useHistory()
   const items = [
     { k: 'Rides', v: kpis.rides, sub: 'last 21 days' },
     { k: 'Events', v: kpis.events.toLocaleString(), sub: 'signed' },

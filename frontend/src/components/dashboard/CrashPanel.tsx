@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react'
 import { AlertOctagon, Ambulance, MapPin, ShieldCheck, X } from 'lucide-react'
 import { useLive } from '@/lib/useLive'
-import { liveSim } from '@/lib/data'
+import { liveSource } from '@/lib/fleet'
+import { useMode } from '@/lib/hooks'
 import { Button } from '@/components/ui/button'
 
 export default function CrashPanel() {
   const d = useLive()
+  const [mode] = useMode()
   const inc = d.active_incident
   const [, force] = useState(0)
 
@@ -118,8 +120,8 @@ export default function CrashPanel() {
           <span className="flex items-center gap-1 font-mono text-[10px] text-muted-foreground">
             <MapPin className="size-3" /> {inc.location.lat.toFixed(4)}, {inc.location.lon.toFixed(4)}
           </span>
-          {inc.status === 'unconfirmed' && (
-            <Button size="sm" variant="secondary" onClick={() => liveSim.cancelCrash()}>
+          {inc.status === 'unconfirmed' && mode === 'seeded' && (
+            <Button size="sm" variant="secondary" onClick={() => liveSource.cancelCrash()}>
               <X className="size-3.5" /> Driver cancel
             </Button>
           )}

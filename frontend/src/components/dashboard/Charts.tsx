@@ -24,7 +24,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { getHistory } from '@/lib/data'
+import { useHistory } from '@/lib/hooks'
 import { LEVEL_LABEL, type Level } from '@/lib/types'
 import Panel from './Panel'
 
@@ -35,7 +35,7 @@ const fmtDay = (ts: number) =>
   new Date(ts).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
 
 export function FatigueTimeline() {
-  const { fatigue } = getHistory()
+  const { fatigue } = useHistory()
   const data = fatigue.filter((_, i) => i % 2 === 0).map((f) => ({ ts: f.ts, score: Math.round(f.score) }))
   const config = { score: { label: 'Fatigue', color: 'var(--chart-1)' } } satisfies ChartConfig
   return (
@@ -62,7 +62,7 @@ export function FatigueTimeline() {
 }
 
 export function DutyCycleChart() {
-  const { duty } = getHistory()
+  const { duty } = useHistory()
   const data = duty.map((d, i) => ({ i, fps: Number(d.fps.toFixed(1)) }))
   const config = { fps: { label: 'FPS', color: 'var(--chart-1)' } } satisfies ChartConfig
   return (
@@ -88,8 +88,8 @@ export function DutyCycleChart() {
 }
 
 export function LevelDistribution() {
-  const { levelDist } = getHistory()
-  const total = levelDist.reduce((a, l) => a + l.seconds, 0)
+  const { levelDist } = useHistory()
+  const total = levelDist.reduce((a, l) => a + l.seconds, 0) || 1
   const data = levelDist.map((l) => ({ name: LEVEL_LABEL[l.level], value: l.seconds, level: l.level }))
   return (
     <Panel title="Time by alert level" icon={<Layers className="size-4 text-primary" />}>
@@ -119,7 +119,7 @@ export function LevelDistribution() {
 }
 
 export function SignalFrequency() {
-  const { signalFreq } = getHistory()
+  const { signalFreq } = useHistory()
   const data = signalFreq
     .map((s) => ({ signal: s.signal.replace('_', ' '), count: s.count }))
     .sort((a, b) => b.count - a.count)
@@ -140,7 +140,7 @@ export function SignalFrequency() {
 }
 
 export function RidesPerDay() {
-  const { rides } = getHistory()
+  const { rides } = useHistory()
   const data = rides.map((r) => ({ day: fmtDay(new Date(r.day).getTime()), rides: r.rides }))
   const config = { rides: { label: 'Rides', color: 'var(--chart-2)' } } satisfies ChartConfig
   return (

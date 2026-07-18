@@ -109,3 +109,37 @@ export const LEVEL_LABEL: Record<Level, string> = {
   warn: 'Warn',
   alarm: 'Alarm',
 }
+
+/* ── integration: runtime mode, live connection, alerts ─────────────── */
+
+// live  = full /ws/fleet stream (telemetry tile updates continuously)
+// alerts= same socket, tile updates ONLY on alerts (drowsy→alarm, crash, dispatch)
+// seeded= offline demo driven by the in-browser simulator (no backend)
+export type Mode = 'live' | 'alerts' | 'seeded'
+export type ConnStatus = 'connecting' | 'online' | 'offline'
+
+export interface DispatchRecord {
+  incident_id: string
+  driver_id: string
+  severity: Severity
+  location: { lat: number; lon: number; speed_mps?: number }
+  dispatched_at: number
+}
+
+export interface VerifyResult {
+  ok: boolean
+  count: number
+  broken_at: number | null
+  checked_at: number
+  reason?: string
+}
+
+export type AlertKind = 'drowsy' | 'crash' | 'dispatch'
+export interface AlertItem {
+  id: string
+  ts: number
+  kind: AlertKind
+  title: string
+  detail: string
+  tone: 'warn' | 'alert' | 'ok'
+}

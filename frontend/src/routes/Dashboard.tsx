@@ -2,6 +2,7 @@ import TopBar from '@/components/dashboard/TopBar'
 import Kpis from '@/components/dashboard/Kpis'
 import LivePanel from '@/components/dashboard/LivePanel'
 import CrashPanel from '@/components/dashboard/CrashPanel'
+import AlertsLog from '@/components/dashboard/AlertsLog'
 import Incidents from '@/components/dashboard/Incidents'
 import Ledger from '@/components/dashboard/Ledger'
 import {
@@ -11,15 +12,58 @@ import {
   RidesPerDay,
   SignalFrequency,
 } from '@/components/dashboard/Charts'
+import { Toaster } from '@/components/ui/sonner'
+import { useConn, useMode } from '@/lib/hooks'
+import type { Mode } from '@/lib/types'
 
 const wide = { fontVariationSettings: '"wdth" 120' } as const
+
+const MODES: { id: Mode; label: string; hint: string }[] = [
+  { id: 'live', label: 'Live', hint: 'full edge stream' },
+  { id: 'alerts', label: 'Alerts', hint: 'alerts only' },
+  { id: 'seeded', label: 'Seeded', hint: 'offline demo' },
+]
+
+function ModeBar() {
+  const [mode, setMode] = useMode()
+  const conn = useConn()
+  const connColor =
+    mode === 'seeded' ? '#948a82' : conn === 'online' ? '#6fe0c4' : conn === 'connecting' ? '#f5c451' : '#ff5148'
+  const connLabel = mode === 'seeded' ? 'offline demo' : conn === 'online' ? 'edge connected' : conn
+
+  return (
+    <div className="flex items-center gap-3">
+      <span className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
+        <span className="size-2 rounded-full" style={{ background: connColor }} />
+        {connLabel}
+      </span>
+      <div className="flex border border-border" role="group" aria-label="Data mode">
+        {MODES.map((m) => (
+          <button
+            key={m.id}
+            type="button"
+            onClick={() => setMode(m.id)}
+            title={m.hint}
+            aria-pressed={mode === m.id}
+            className={`px-3 py-1 font-mono text-[10px] uppercase tracking-wider transition-colors ${
+              mode === m.id ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-secondary/60'
+            }`}
+          >
+            {m.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 export default function Dashboard() {
   return (
     <div className="min-h-svh bg-background font-sans text-foreground">
+      <Toaster position="top-right" />
       <TopBar />
       <main className="mx-auto max-w-[1600px] space-y-4 p-4 sm:p-6">
-        <div className="flex flex-wrap items-end justify-between gap-2">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <h1 className="text-2xl font-semibold" style={wide}>
               Fleet overview
@@ -28,9 +72,7 @@ export default function Dashboard() {
               Single active driver · decisions only — no video, no raw sensors leave the edge
             </p>
           </div>
-          <span className="border border-border px-2 py-1 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
-            demo · seeded history
-          </span>
+          <ModeBar />
         </div>
 
         {/* hero row */}
@@ -40,6 +82,8 @@ export default function Dashboard() {
           </div>
           <CrashPanel />
         </div>
+
+        <AlertsLog />
 
         <Kpis />
 
