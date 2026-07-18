@@ -74,10 +74,11 @@ class Escalator:
             self.time_in_level += dt
 
         effective = AWAKE if gated else self.level
-        intensity = (
-            clamp(self.time_in_level / self.t.alarm_intensify_s)
-            if effective == ALARM else 0.0
-        )
+        intensity = 0.0
+        if effective == ALARM:   # ramp with sustained-alarm time AND how deep the debt is
+            time_i = clamp(self.time_in_level / self.t.alarm_intensify_s)
+            depth = clamp((score - self.t.up_alarm) / max(1.0, 100.0 - self.t.up_alarm))
+            intensity = max(time_i, depth)
         return Escalation(
             level=self.level, prev_level=prev, transition=transition,
             effective_level=effective, gated=gated, audio_intensity=intensity,

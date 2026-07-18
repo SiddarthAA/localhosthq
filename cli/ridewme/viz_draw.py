@@ -46,36 +46,33 @@ def annotate(frame, lms, m):
     h, w = img.shape[:2]
     col = LEVEL_BGR.get(m.get("level", "awake"), LEVEL_BGR["awake"])
 
-    # Mesh only while capturing the face (calibration); a clean feed after that.
-    if m.get("show_mesh", False) and lms and len(lms) >= 468:
+    if lms and len(lms) >= 468:
         pts = [(int(x), int(y)) for (x, y) in lms]
-        _delaunay(cv2, img, pts, (70, 95, 70), w, h)         # dim triangulated mesh
-        for i in _EMPHASIS:                                  # emphasize eyes + mouth
+        if m.get("show_mesh", False):                        # first ~10s: scan the face (full mesh)
+            _delaunay(cv2, img, pts, (70, 95, 70), w, h)
+        else:                                                # after: the tracked landmark points
+            for x, y in pts:
+                if 0 <= x < w and 0 <= y < h:
+                    cv2.circle(img, (x, y), 1, (110, 130, 110), -1)
+        for i in _EMPHASIS:                                  # eyes + mouth in the level color
             if i < len(pts):
                 x, y = pts[i]
                 if 0 <= x < w and 0 <= y < h:
                     cv2.circle(img, (x, y), 2, col, -1, cv2.LINE_AA)
 
-    cv2.rectangle(img, (2, 2), (w - 3, h - 3), col, 4)       # level border (text HUD is CSS)
+    _border(cv2, img, m, col, w, h)
     return img
 
 
-def _hud(cv2, img, m, col):
-    if not m.get("calibrated", True):
-        lines = [f"CALIBRATING {int(m.get('calib_progress', 0.0) * 100)}%  ·  look ahead"]
+def _border(cv2, img, m, col, w, h):
+    """Level-colored frame; on alarm, a red border that presses inward with intensity."""
+    if m.get("level") == "alarm":
+        inten = max(0.0, min(1.0, float(m.get("alarm_intensity", 0.0) or 0.0)))
+        thick = int(4 + inten * 26)                          # stronger red the longer the eyes stay shut
+        off = thick // 2
+        cv2.rectangle(img, (off, off), (w - 1 - off, h - 1 - off), (60, 60, 255), thick)
     else:
-        s = m.get("signals") or {}
-        lines = [
-            f"{m.get('level', 'awake').upper()}   score {m.get('score', 0):.0f}",
-            f"EAR {s.get('ear', '-')}   PERCLOS {s.get('perclos', '-')}   {m.get('fps', 0):.0f}fps",
-        ]
-        if m.get("gated"):
-            lines.append("PARKED · gated")
-    y = 34
-    for ln in lines:
-        cv2.putText(img, ln, (16, y), cv2.FONT_HERSHEY_SIMPLEX, 0.72, (0, 0, 0), 4, cv2.LINE_AA)
-        cv2.putText(img, ln, (16, y), cv2.FONT_HERSHEY_SIMPLEX, 0.72, col, 1, cv2.LINE_AA)
-        y += 32
+        cv2.rectangle(img, (2, 2), (w - 3, h - 3), col, 4)
 
 
 def placeholder(text="waiting for camera…"):

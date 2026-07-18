@@ -47,6 +47,14 @@ def _console_listener(daemon) -> None:
 
 
 def main() -> None:
+    # Line-buffer stdout so the [drowsy]/[CRASH] log is never swallowed when the
+    # output is a pipe or file (block-buffered by default) and the process is
+    # killed — the events still reach the ledger, but the operator's log wouldn't.
+    try:
+        sys.stdout.reconfigure(line_buffering=True)
+    except (AttributeError, ValueError):
+        pass
+
     ap = argparse.ArgumentParser(description="ridewme edge daemon")
     ap.add_argument("--sim", action="store_true", help="run fully offline with scripted inputs")
     ap.add_argument("--replay", metavar="VIDEO", help="use a local video file for frames")

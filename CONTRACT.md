@@ -89,16 +89,18 @@ throttled **sample** (default 1 Hz) whenever `level != awake` or `score > 0`.
   "level": "warn", "prev_level": "notice", "score": 58.3,
   "signals": { "ear": 0.19, "perclos": 0.41, "blink_rate": 7.0, "blink_dur_ms": 480,
                "head_nod": 0.22, "yawn": 0.12 },
-  "fired": ["perclos", "blink_dur"], "agree_count": 2,
+  "fired": ["eyes", "head_nod"], "agree_count": 2,
   "gated": false, "gate_reason": null,
   "calibrated": true }
 ```
 - `kind` ∈ `transition | sample`.
 - `level` ∈ `awake | notice | warn | alarm` (L5, with hysteresis).
-- `score` ∈ `0..100` (L3 leaky integrator — a corroborated, persistent value, **not** a threshold).
+- `score` ∈ `0..100` — a **penalty/recovery debt**: `0` = wide awake; eye closure adds penalty (the
+  deeper/longer the eyes are shut, the faster it climbs), head-nod/yawn add smaller penalties, and
+  keeping the eyes open pays it back toward `0` each second. A normal blink barely moves it.
 - `signals` — the current L1 values (nullable if a signal isn't available yet).
-- `fired` — which signals are currently active/agreeing; `agree_count = len(fired)`.
-- `gated` — L4 suppressed escalation (e.g. vehicle parked); `gate_reason` e.g. `"not_moving"`.
+- `fired` — which penalties are active now: subset of `["eyes", "head_nod", "yawn"]`; `agree_count = len(fired)`.
+- `gated` — L4 suppressed escalation (context gate, **off by default**); `gate_reason` e.g. `"not_moving"`.
 
 **`crash`** — from the sensor-fusion track (Feature 2). One event per lifecycle transition (chained).
 ```json

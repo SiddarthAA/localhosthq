@@ -18,8 +18,7 @@ _LEVEL = {
     "warn":   ("Getting drowsy — take a break soon", "bold yellow", "▲"),
     "alarm":  ("WAKE UP  —  PULL OVER", "bold white on red", "⚠"),
 }
-_WHY = {"perclos": "eyes closing", "blink": "slow blinks",
-        "head_nod": "head nodding", "yawn": "yawning"}
+_WHY = {"eyes": "eyes closing", "head_nod": "head nodding", "yawn": "yawning"}
 _SEV_STYLE = {"minor": "yellow", "moderate": "bright_red", "severe": "bold white on red"}
 
 

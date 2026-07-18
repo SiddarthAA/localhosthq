@@ -206,7 +206,7 @@ function update(m){
   $('v_ear').textContent=s.ear!=null?s.ear.toFixed(2):'—';
   $('v_agree').textContent=m.agree_count||0;
   const fired=m.fired||[];
-  $('chips').innerHTML=['perclos','blink','head_nod','yawn'].map(k=>{const on=fired.includes(k);return `<span class="chip" style="${on?`color:${c};border-color:${c}80;background:${c}14`:''}">${k}</span>`;}).join('');
+  $('chips').innerHTML=['eyes','head_nod','yawn'].map(k=>{const on=fired.includes(k);return `<span class="chip" style="${on?`color:${c};border-color:${c}80;background:${c}14`:''}">${k}</span>`;}).join('');
   const lb=$('live'); if(m.link==='online'){lb.classList.add('badge-live');$('livetxt').textContent='live';}else{lb.classList.remove('badge-live');$('livetxt').textContent=m.link||'offline';}
 
   const a=m.accel;

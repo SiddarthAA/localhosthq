@@ -172,7 +172,8 @@ class Daemon:
             "fps": _r(self._fps, 1), "duty": self._duty_state,
             "speed_mps": self.motion.get().speed_mps, "link": self.uplink.mode, "crash": crash,
             "driver": self.cfg.driver_name, "uptime_s": time.time() - self._start_t,
-            "show_mesh": not baseline.ready,       # mesh only while capturing/calibrating the face
+            "show_mesh": (time.time() - self._start_t) < self.t.calibration_seconds,  # scan face ~10s, then points
+            "alarm_intensity": esc.audio_intensity,   # drives the reddening video border
             "accel": self._last_sensor.get("accel") or self._last_sensor.get("accelG"),  # linear (~0-centered)
             "gyro": self._last_sensor.get("gyro"),
         }

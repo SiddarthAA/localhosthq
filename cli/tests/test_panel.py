@@ -34,9 +34,9 @@ def test_calibrating():
 
 
 def test_warn_shows_plain_language_why():
-    t = _text({**BASE, "level": "warn", "score": 55.0, "fired": ["perclos", "blink"]})
+    t = _text({**BASE, "level": "warn", "score": 55.0, "fired": ["eyes", "head_nod"]})
     assert "drowsy" in t
-    assert "eyes closing" in t and "slow blinks" in t
+    assert "eyes closing" in t and "head nodding" in t
 
 
 def test_alarm_is_loud():

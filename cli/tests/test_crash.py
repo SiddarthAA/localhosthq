@@ -82,22 +82,21 @@ def test_pothole_does_not_confirm():
 
 
 def test_gradual_stop_does_not_confirm():
-    # a gradual high-g decel to a stop: speed drops but jerk is low -> accel_jerk
-    # never fires, so only speed_drop -> 1 signal -> no crash.
+    # a smooth high-g decel to a stop: accel rises and falls gradually (LOW jerk) while
+    # speed bleeds off -> accel_jerk never fires -> not a crash.
     eng, emitted = build()
     ts, out = 0.0, []
     while ts < 1.0:
         out.append((ts, pkt(speed=12.0))); ts += 0.02
-    # ramp accel 0->3g over ~0.5s (low jerk) while speed bleeds 12->0
-    for i in range(25):
-        g = 3.0 * (i + 1) / 25.0
-        out.append((ts, pkt(speed=12.0 * (1 - (i + 1) / 25.0),
-                            accelG=(g * 9.8, 0.0, 9.8)))); ts += 0.02
-    while ts < 3.2:
+    for i in range(150):                        # smooth 0->~3g->0 triangle over 3s (jerk ~2 g/s)
+        frac = i / 150.0
+        g = 3.0 * (1 - abs(2 * frac - 1))
+        out.append((ts, pkt(speed=12.0 * (1 - frac), accelG=(g * 9.8, 0.0, 9.8)))); ts += 0.02
+    while ts < 6.0:
         out.append((ts, pkt(speed=0.0))); ts += 0.02
     run(eng, out)
     assert all(e["status"] != E.CONFIRMED for e in emitted)
-    assert emitted == [] or all("accel_jerk" not in e.get("signals_fired", []) for e in emitted)
+    assert all("accel_jerk" not in e.get("signals_fired", []) for e in emitted)
 
 
 def test_pregate_rejects_parked_jolt():

@@ -32,45 +32,37 @@ def _b(name: str, default: bool) -> bool:
 class Tuning:
     """Engine tuning. Deviation-from-baseline everywhere possible (L2), never raw globals."""
 
-    # L2 — calibration
-    calibration_seconds: float = 12.0
+    # L2 — face capture / baseline (first 10s: scan the face, learn this driver's normal)
+    calibration_seconds: float = 10.0
 
-    # L1 — signal windows
-    perclos_window_s: float = 60.0            # clinical PERCLOS window
-    blink_window_s: float = 30.0              # window for blink-rate
-    ear_closed_ratio: float = 0.72            # eye "closed" if EAR < baseline_open * ratio
-    long_blink_ms: float = 400.0              # a slow/long blink — the real drowsiness tell
-    base_blink_ms: float = 180.0              # a normal alert blink
+    # L1 — signal extraction
+    perclos_window_s: float = 60.0
+    blink_window_s: float = 30.0
+    ear_closed_ratio: float = 0.72            # eyes "closed" when EAR < baseline_open * ratio
+    long_blink_ms: float = 400.0
+    base_blink_ms: float = 180.0
+    headnod_lo_deg: float = 10.0              # pitch drop to start counting (lenient)
+    headnod_hi_deg: float = 26.0
+    yawn_lo: float = 0.38                     # MAR over baseline (lenient)
+    yawn_hi: float = 0.68
 
-    # L1 — thresholds for the corroboration danger channels (deviation from baseline)
-    perclos_lo: float = 0.08                  # PERCLOS at/below this = alert
-    perclos_hi: float = 0.40                  # PERCLOS at/above this = severe
-    headnod_lo_deg: float = 8.0               # pitch drop from neutral to start counting
-    headnod_hi_deg: float = 25.0              # pitch drop = full nod
-    yawn_lo: float = 0.35                     # MAR (mouth-aspect) over baseline
-    yawn_hi: float = 0.65
+    # L3 — drowsiness = a penalty/recovery "debt" (0 = wide awake; climbs with eye closure).
+    #   closure = how far EAR fell from open toward shut (0 = open, 1 = fully closed).
+    blink_deadzone: float = 0.40              # closure below this = open enough -> NO penalty (normal blinks)
+    closure_penalty_per_s: float = 46.0       # penalty rate at full closure; a ~1.5s shut -> alarm
+    headnod_penalty_per_s: float = 14.0       # secondary penalties (still tracked)
+    yawn_penalty_per_s: float = 11.0
+    penalty_activation: float = 0.42          # head-nod / yawn danger above this counts
+    recover_per_s: float = 22.0               # eyes open -> recover toward 0 (baseline) each second
 
-    # L3 — trust engine (leaky integrator + corroboration)
-    activation: float = 0.40                  # a channel "fires" above this danger
-    single_cap_other: float = 0.25            # lone non-PERCLOS signal -> whisper (notice ceiling)
-    single_cap_perclos: float = 0.60          # lone PERCLOS can reach warn, never alarm
-    pair_cap: float = 0.72                     # two agreeing -> up to warn/low-alarm
-    perclos_override: float = 0.82            # sustained eye-closure is itself dangerous
-    perclos_override_target: float = 0.70
-    weights: dict = field(default_factory=lambda: {
-        "perclos": 0.50, "blink": 0.20, "head_nod": 0.15, "yawn": 0.15,
-    })
-    rise_tau_s: float = 3.0                    # score climbs over seconds (persistence)
-    fall_tau_s: float = 6.0                    # backs off slower (no flapping), still recovers
-
-    # L5 — escalation thresholds (up) and hysteresis (down must fall below these)
-    up_notice: float = 20.0
-    up_warn: float = 45.0
-    up_alarm: float = 72.0
-    down_notice: float = 12.0                  # alarm/warn -> below this to leave notice
-    down_warn: float = 38.0
-    down_alarm: float = 62.0
-    alarm_intensify_s: float = 8.0             # seconds in alarm to reach peak intensity
+    # L5 — escalation on the debt (lenient) + hysteresis (must fall below `down_*` to step down)
+    up_notice: float = 14.0
+    up_warn: float = 38.0
+    up_alarm: float = 62.0
+    down_notice: float = 7.0
+    down_warn: float = 30.0
+    down_alarm: float = 52.0
+    alarm_intensify_s: float = 5.0            # seconds of sustained alarm to peak loudness + red border
 
     # L4 — context gate
     moving_mps: float = 2.0                     # below this GPS speed = "parked", suppress alerts
@@ -89,17 +81,17 @@ class Tuning:
     motion_stale_s: float = 3.0                 # motion older than this -> gate assumes moving (fail-safe)
     # Pre-gate
     pregate_min_speed_mps: float = 2.0          # was the vehicle moving before the candidate?
-    # Layer 1 — trigger (cheap wake-up, not a decision)
-    accel_spike_g: float = 2.5                  # accel deviation (g) that wakes Layer 2
-    # Layer 2 — corroboration over the window
+    # Layer 1 — trigger (cheap wake-up, not a decision) — lenient
+    accel_spike_g: float = 2.0                  # accel deviation (g) that wakes Layer 2
+    # Layer 2 — corroboration over the window — lenient
     crash_l2_window_s: float = 2.0              # score this window around the candidate
-    jerk_g_per_s: float = 20.0                  # impact jerk — separates a crash from hard braking
-    gyro_axis_dps: float = 150.0                # per-axis rotation (deg/s); need >= 2 axes
+    jerk_g_per_s: float = 13.0                  # impact jerk — separates a crash from hard braking
+    gyro_axis_dps: float = 120.0                # per-axis rotation (deg/s); need >= 2 axes
     gyro_axes_required: int = 2
-    speed_drop_mps: float = 6.0                 # sudden GPS speed drop across the window...
-    speed_drop_end_mps: float = 3.0             # ...toward (near) zero — impact, not gradual braking
-    severity_moderate_g: float = 3.5            # peak-Δg severity bands: minor < 3.5 ...
-    severity_severe_g: float = 6.0              # ... moderate 3.5–6 · severe > 6
+    speed_drop_mps: float = 5.0                 # sudden GPS speed drop across the window...
+    speed_drop_end_mps: float = 3.5             # ...toward (near) zero — impact, not gradual braking
+    severity_moderate_g: float = 3.0            # peak-Δg severity bands: minor < 3.0 ...
+    severity_severe_g: float = 5.0              # ... moderate 3.0–5 · severe > 5
     # Layer 3 — behavioral confirmation window
     crash_l3_window_s: float = 13.0             # base human window (12–15s)
     crash_l3_window_severe_s: float = 8.0       # severe escalates faster (shorter window)

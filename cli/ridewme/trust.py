@@ -1,13 +1,13 @@
-"""L3 — Corroboration + persistence. THE MOAT.
+"""L3 — the drowsiness score, as a penalty/recovery "debt".
 
-A fatigue *score* rises only when multiple independent signals AGREE and the
-condition PERSISTS over seconds — a leaky integrator, not an instant threshold
-trip. PERCLOS is the backbone, but a *single* signal is capped at a whisper;
-only agreement unlocks a real alarm. This is the false-positive killer, and it's
-a decision-quality claim, not an accuracy one — so no dataset "beats" it.
+Baseline is 0 (wide awake). Eye closure adds penalty — the deeper and the longer
+the eyes stay shut, the faster the score climbs; head-nod and yawn add smaller
+penalties. A normal quick blink stays inside a deadzone and barely moves the score
+(and recovers immediately). Keeping the eyes open pays the debt back down toward 0
+each second. Sustained closure keeps climbing → alarm.
 
-Do NOT flatten this into a plain threshold. The continuous, corroborated,
-time-integrated `score` IS the product.
+This is a decision-quality claim, not an accuracy one: the discipline is in *not*
+punishing normal blinks and in demanding the driver actively earn the score back.
 """
 
 from __future__ import annotations
@@ -15,17 +15,16 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from .signals import Signals
-from .util import clamp, ema_alpha, norm
+from .util import clamp, norm
 
-# The corroboration channels. PERCLOS is the backbone; the rest are independent tells.
-CHANNELS = ("perclos", "blink", "head_nod", "yawn")
+EYES, HEAD_NOD, YAWN = "eyes", "head_nod", "yawn"
 
 
 @dataclass
 class TrustState:
-    score: float                       # 0..100, corroborated + persistent
-    dangers: dict[str, float] = field(default_factory=dict)   # per-channel 0..1
-    fired: list[str] = field(default_factory=list)            # channels above activation
+    score: float                       # 0 = wide awake, climbs with drowsiness (debt)
+    dangers: dict[str, float] = field(default_factory=dict)   # closure / head_nod / yawn (0..1)
+    fired: list[str] = field(default_factory=list)            # which penalties are active now
     agree_count: int = 0
 
 
@@ -34,50 +33,40 @@ class TrustEngine:
         self.t = tuning
         self.score = 0.0
 
-    def _dangers(self, s: Signals) -> dict[str, float]:
-        t = self.t
-        return {
-            "perclos": norm(s.perclos, t.perclos_lo, t.perclos_hi),
-            "blink": norm(s.blink_dur_ms, t.base_blink_ms, t.long_blink_ms),
-            "head_nod": norm(s.pitch_drop_deg, t.headnod_lo_deg, t.headnod_hi_deg),
-            "yawn": norm(s.mar_excess, t.yawn_lo, t.yawn_hi),
-        }
-
     def update(self, s: Signals, baseline, dt: float) -> TrustState:
-        dt = clamp(dt, 0.0, 1.0)  # guard against stalls distorting the integrator
+        t = self.t
+        dt = clamp(dt, 0.0, 1.0)   # guard against stalls
 
-        # No face or no baseline yet => no trustworthy evidence; decay toward calm.
-        if not s.face_present or not baseline.ready:
-            self.score += (0.0 - self.score) * ema_alpha(dt, self.t.fall_tau_s)
-            return TrustState(score=self.score)
+        # No face or not calibrated yet -> no trustworthy evidence: recover toward 0.
+        if not s.face_present or not baseline.ready or s.ear is None:
+            self.score = max(0.0, self.score - t.recover_per_s * dt)
+            return TrustState(score=round(self.score, 1))
 
-        dangers = self._dangers(s)
-        fired = [c for c, d in dangers.items() if d > self.t.activation]
-        agree = len(fired)
+        # closure: 0 when eyes are at their open baseline, 1 when fully shut.
+        span = max(1e-3, baseline.ear_open - baseline.closed_ear_threshold)
+        closure = clamp((baseline.ear_open - s.ear) / span, 0.0, 1.0)
+        head_nod = norm(s.pitch_drop_deg, t.headnod_lo_deg, t.headnod_hi_deg)
+        yawn = norm(s.mar_excess, t.yawn_lo, t.yawn_hi)
+        dangers = {"closure": round(closure, 3), "head_nod": round(head_nod, 3), "yawn": round(yawn, 3)}
 
-        weights = self.t.weights
-        raw = sum(weights[c] * dangers[c] for c in CHANNELS)  # weights sum to 1 -> 0..1
+        fired: list[str] = []
+        penalty = 0.0
+        if closure > t.blink_deadzone:   # past a normal-blink deadzone -> penalize, scaled by depth
+            over = (closure - t.blink_deadzone) / (1.0 - t.blink_deadzone)
+            penalty += t.closure_penalty_per_s * over
+            fired.append(EYES)
+        if head_nod > t.penalty_activation:
+            penalty += t.headnod_penalty_per_s * head_nod
+            fired.append(HEAD_NOD)
+        if yawn > t.penalty_activation:
+            penalty += t.yawn_penalty_per_s * yawn
+            fired.append(YAWN)
 
-        # ── Corroboration gate: a lone signal is only a whisper. ──────────
-        if agree <= 1:
-            lone_is_perclos = agree == 1 and fired[0] == "perclos"
-            cap = self.t.single_cap_perclos if lone_is_perclos else self.t.single_cap_other
-            target = min(raw, cap)
-        elif agree == 2:
-            target = min(raw, self.t.pair_cap)
-        else:  # >= 3 agree -> full range unlocked, a real alarm is possible
-            target = raw
-
-        # Backbone override: sustained eye-closure (microsleep) is dangerous on its
-        # own, but even then it's capped below full alarm unless corroborated.
-        if dangers["perclos"] >= self.t.perclos_override:
-            target = max(target, self.t.perclos_override_target)
-
-        target100 = target * 100.0
-
-        # ── Persistence: leaky integrator, rises slowly, backs off slower. ─
-        tau = self.t.rise_tau_s if target100 > self.score else self.t.fall_tau_s
-        self.score += (target100 - self.score) * ema_alpha(dt, tau)
+        if penalty > 0.0:
+            self.score += penalty * dt
+        else:
+            self.score -= t.recover_per_s * dt   # eyes open, nothing firing -> pay the debt back
         self.score = clamp(self.score, 0.0, 100.0)
 
-        return TrustState(score=self.score, dangers=dangers, fired=fired, agree_count=agree)
+        return TrustState(score=round(self.score, 1), dangers=dangers,
+                          fired=fired, agree_count=len(fired))
