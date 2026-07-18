@@ -43,9 +43,6 @@ export default function Engine() {
                 <h3 className="layer__name">{l.name}</h3>
                 <p className="layer__desc">{l.desc}</p>
               </div>
-              <span className="layer__arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </span>
             </li>
           ))}
         </Reveal>

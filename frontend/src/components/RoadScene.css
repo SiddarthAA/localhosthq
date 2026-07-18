@@ -9,7 +9,7 @@
   position: relative;
   width: 100%;
   aspect-ratio: 4 / 3;
-  border-radius: 18px;
+  border-radius: 2px;
   overflow: hidden;
   background: linear-gradient(180deg, #1b1413, #0c0908);
   border: 1px solid var(--cream-12);

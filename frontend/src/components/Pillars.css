@@ -16,16 +16,12 @@
   border-radius: var(--radius-card);
   background: var(--surface);
   transition:
-    transform 0.35s var(--ease-out),
-    border-color 0.35s var(--ease-out),
-    box-shadow 0.35s var(--ease-out);
+    border-color 0.3s var(--ease-out),
+    background-color 0.3s var(--ease-out);
 }
 .pillar:hover {
-  transform: translateY(-3px);
-  border-color: rgba(111, 224, 196, 0.4);
-  box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.45),
-    0 0 44px rgba(111, 224, 196, 0.08);
+  border-color: rgba(111, 224, 196, 0.55);
+  background: var(--surface-2);
 }
 
 .pillar__inner {
@@ -47,7 +43,7 @@
   place-items: center;
   width: 52px;
   height: 52px;
-  border-radius: 14px;
+  border-radius: 2px;
   color: var(--signal);
   background: rgba(111, 224, 196, 0.08);
   border: 1px solid rgba(111, 224, 196, 0.24);

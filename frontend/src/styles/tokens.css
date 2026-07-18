@@ -69,9 +69,10 @@
   --page-x: clamp(1.25rem, 4.5vw, 4.5rem);
   --section-y: clamp(6rem, 12vh, 12rem);
 
-  /* --- shape --- */
+  /* --- shape (sharp / crisp) --- */
   --radius-pill: 999px;
-  --radius-card: 18px;
+  --radius-card: 2px;
+  --radius-btn: 2px;
 
   /* --- motion --- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);

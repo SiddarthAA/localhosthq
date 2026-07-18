@@ -25,11 +25,7 @@ export default function Hero() {
         .from('.hero__lens', { autoAlpha: 0, scale: 0.9, duration: 1.3, ease: 'power2.out' }, 0.1)
         .from('[data-hero-fade]', { autoAlpha: 0, y: 16, duration: 0.8, stagger: 0.1 }, 0.65)
         .from('.hero__tick', { autoAlpha: 0, y: 10, duration: 0.6, stagger: 0.06 }, 0.9)
-
-      const scrub = { trigger: root.current, start: 'top top', end: 'bottom top', scrub: 0.6 }
-      gsap.to('.hero__title--top', { yPercent: -34, ease: 'none', scrollTrigger: scrub })
-      gsap.to('.hero__title--bot', { yPercent: 30, ease: 'none', scrollTrigger: scrub })
-      gsap.to('.hero__lens', { scale: 1.15, autoAlpha: 0.3, ease: 'none', scrollTrigger: scrub })
+      // no scroll-parallax — it left the centre empty on scroll and read as broken
     }, root)
     return () => ctx.revert()
   }, [])

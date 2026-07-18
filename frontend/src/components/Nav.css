@@ -98,7 +98,7 @@
   align-items: center;
   gap: 0.4rem;
   padding: 0.6rem 1.4rem;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-btn);
   background: var(--cream);
   color: var(--ink);
   font-weight: 700;
@@ -111,7 +111,7 @@
 }
 .nav__demo:hover {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(111, 224, 196, 0.25);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
 }
 
 @media (max-width: 900px) {

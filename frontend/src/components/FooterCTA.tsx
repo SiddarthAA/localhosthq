@@ -8,7 +8,6 @@ export default function FooterCTA() {
     <section id="contact" className="cta section on-dark" data-nav-theme="dark">
       <EtherealShadow tone="mixed" className="cta__ether" />
       <span className="cta__ghost" aria-hidden="true">RidewMe</span>
-      <div className="cta__horizon" aria-hidden="true" />
 
       <div className="shell cta__inner">
         <Reveal className="cta__lead" stagger={0.12}>

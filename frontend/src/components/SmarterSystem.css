@@ -20,7 +20,7 @@
 }
 .acc__item {
   border: 1px solid var(--line);
-  border-radius: 14px;
+  border-radius: 2px;
   background: var(--surface);
   overflow: hidden;
   transition:
