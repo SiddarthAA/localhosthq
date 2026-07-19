@@ -12,8 +12,9 @@ import {
   RidesPerDay,
   SignalFrequency,
 } from '@/components/dashboard/Charts'
+import { Volume2, VolumeX } from 'lucide-react'
 import { Toaster } from '@/components/ui/sonner'
-import { useConn, useMode } from '@/lib/hooks'
+import { useConn, useMode, useMuted } from '@/lib/hooks'
 import type { Mode } from '@/lib/types'
 
 const wide = { fontVariationSettings: '"wdth" 120' } as const
@@ -27,6 +28,7 @@ const MODES: { id: Mode; label: string; hint: string }[] = [
 function ModeBar() {
   const [mode, setMode] = useMode()
   const conn = useConn()
+  const [muted, toggleMuted] = useMuted()
   const connColor =
     mode === 'seeded' ? '#948a82' : conn === 'online' ? '#6fe0c4' : conn === 'connecting' ? '#f5c451' : '#ff5148'
   const connLabel = mode === 'seeded' ? 'offline demo' : conn === 'online' ? 'edge connected' : conn
@@ -53,6 +55,15 @@ function ModeBar() {
           </button>
         ))}
       </div>
+      <button
+        type="button"
+        onClick={toggleMuted}
+        aria-pressed={!muted}
+        title={muted ? 'Alert chimes off — click to enable' : 'Alert chimes on'}
+        className="border border-border p-1.5 text-muted-foreground transition-colors hover:bg-secondary/60"
+      >
+        {muted ? <VolumeX className="size-3.5" /> : <Volume2 className="size-3.5 text-primary" />}
+      </button>
     </div>
   )
 }

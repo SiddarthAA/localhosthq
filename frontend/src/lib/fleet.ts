@@ -8,6 +8,7 @@
 import { toast } from 'sonner'
 import { FLEET_WS, PRIMARY_DRIVER, PRIMARY_NAME, getMode, subscribeMode } from './config'
 import { mapIncident } from './api'
+import { chime } from './sound'
 import { liveSim } from './data'
 import type { AlertItem, ConnStatus, DriverState, Level, Severity, SignalKey } from './types'
 
@@ -79,6 +80,10 @@ function pushAlert(a: Omit<AlertItem, 'id'>) {
   if (_alerts.length > 40) _alerts.length = 40
   const snap = [..._alerts]
   alertListeners.forEach((l) => l(snap))
+  // audible chime — same event surface as the toasts
+  if (a.kind === 'dispatch') chime('dispatch')
+  else if (a.kind === 'drowsy') chime('alarm')
+  else if (a.kind === 'crash') chime(a.tone === 'alert' ? 'crash' : a.tone === 'ok' ? 'cancel' : 'warn')
 }
 export function getAlerts(): AlertItem[] {
   return _alerts

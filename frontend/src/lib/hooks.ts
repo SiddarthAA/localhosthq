@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getMode, setMode, subscribeMode } from './config'
 import { getAlerts, getConn, subscribeAlerts, subscribeConn } from './fleet'
+import { isMuted, subscribeMute, toggleMuted } from './sound'
 import { getHistory } from './data'
 import { buildHistory } from './api'
 import type { History } from './data'
@@ -22,6 +23,12 @@ export function useAlerts(): AlertItem[] {
   const [a, setA] = useState<AlertItem[]>(getAlerts)
   useEffect(() => subscribeAlerts(setA), [])
   return a
+}
+
+export function useMuted(): [boolean, () => void] {
+  const [m, setM] = useState<boolean>(isMuted)
+  useEffect(() => subscribeMute(setM), [])
+  return [m, toggleMuted]
 }
 
 const EMPTY_HISTORY: History = {
