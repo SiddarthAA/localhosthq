@@ -31,7 +31,7 @@ export default function CrashPanel() {
           </div>
           <p className="text-sm font-semibold">No active incident</p>
           <p className="max-w-[26ch] text-xs text-muted-foreground">
-            Fusing accelerometer, gyroscope &amp; GPS. A crash is called only when ≥2 of 3 agree.
+            Fusing accelerometer &amp; gyroscope. A crash is called only when both agree.
           </p>
           <div className="mt-2 flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-muted-foreground">
             <span className="size-1.5 rounded-full bg-primary" />
@@ -115,7 +115,7 @@ export default function CrashPanel() {
           {[
             { k: 'Peak Δg', v: inc.peak_g.toFixed(1) },
             { k: 'Jerk', v: inc.jerk.toFixed(0) },
-            { k: 'Signals', v: `${inc.signals_fired.length}/3` },
+            { k: 'Signals', v: `${inc.signals_fired.length}/2` },
           ].map((m) => (
             <div key={m.k} className="bg-card px-2 py-2">
               <p className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">{m.k}</p>
