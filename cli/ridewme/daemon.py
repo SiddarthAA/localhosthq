@@ -36,6 +36,11 @@ def _r(x, n=3):
     return round(float(x), n)
 
 
+# Hardcoded nearest responder for the demo (the backend owns the real dispatch).
+_HOSPITAL = "Apollo Spectra Hospitals — Koramangala, Bengaluru"
+_HOSPITAL_ADDR = "143, 1st Cross Rd, 5th Block, Koramangala, Bengaluru 560095"
+
+
 class Daemon:
     def __init__(self, cfg: Config, feature_source, sensor_source):
         self.cfg = cfg
@@ -79,6 +84,7 @@ class Daemon:
         self._panel_gated = False
         self._panel_fired: list = []
         self._panel_flash: tuple | None = None   # (msg, until_ts, style)
+        self._panel_dispatch: float | None = None  # show the "contacting hospital" takeover until this ts
         self.viz = None                          # set to a VizState by main when --viz
         self._last_sensor: dict = {}             # freshest sensor packet (for the viz accel/gyro cards)
         self._last_bright = 1.0                  # L0 frame brightness (0..1) for the viz low-light chip
@@ -145,13 +151,16 @@ class Daemon:
         flash = None
         if self._panel_flash and now < self._panel_flash[1]:
             flash = {"msg": self._panel_flash[0], "style": self._panel_flash[2]}
+        dispatch = None
+        if self._panel_dispatch and now < self._panel_dispatch:
+            dispatch = {"hospital": _HOSPITAL, "address": _HOSPITAL_ADDR}
         return {
             "driver_id": self.cfg.driver_id, "driver": self.cfg.driver_name,
             "session_id": self.session_id, "uptime_s": now - self._start_t,
             "calibrated": self.calib.ready, "calib_progress": self.calib.progress(now),
             "level": self._panel_level, "score": self._panel_score, "gated": self._panel_gated,
             "fired": self._panel_fired, "speed_mps": self.motion.get().speed_mps,
-            "link": self.uplink.mode, "incident": incident, "flash": flash,
+            "link": self.uplink.mode, "incident": incident, "flash": flash, "dispatch": dispatch,
             "naive": self.naive is not None,
         }
 
@@ -331,9 +340,11 @@ class Daemon:
                   f"signals={payload['signals_fired']} -> {payload['window_seconds']:.0f}s window "
                   f"('c' cancel){tag}")
         elif status == E.CONFIRMED:
-            self._flash("Emergency services notified — help is on the way", "bold white on red", 6.0)
-            print(f"[CRASH] CONFIRMED · {payload['incident_id']} "
-                  f"motion={payload.get('final_motion')} -> DISPATCH @ {payload.get('location')}")
+            self._panel_dispatch = time.time() + 10.0   # drives the "contacting hospital" panel takeover
+            self._flash("Fleet manager notified — contacting first responders", "bold white on red", 6.0)
+            print(f"[CRASH] CONFIRMED · {payload['incident_id']} motion={payload.get('final_motion')}")
+            print(f"[DISPATCH] Fleet manager notified · contacting first responders & hospitals "
+                  f"→ {_HOSPITAL}")
         else:  # cancelled
             self._flash("Cancelled — glad you're OK", "bold black on green", 4.0)
             print(f"[CRASH] cancelled · {payload['incident_id']} reason={payload.get('reason')}")

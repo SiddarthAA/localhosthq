@@ -51,6 +51,22 @@ def render(snap: dict):
         )
         return Panel(body, title="ridewme · driver box", border_style="red", padding=(1, 2))
 
+    # ── post-confirm: fleet + hospital being contacted ────────────────
+    disp = snap.get("dispatch")
+    if disp is not None:
+        body = Group(
+            Align.center(Text("✓  IMPACT CONFIRMED", style="bold white on red")),
+            Text(""),
+            Align.center(Text("Fleet manager notified", style="bold white")),
+            Align.center(Text("Contacting first responders & hospitals", style="bold yellow")),
+            Text(""),
+            Align.center(Text("🚑  " + disp["hospital"], style="bold red")),
+            Align.center(Text(disp["address"], style="dim white")),
+            Text(""),
+            Align.center(Text("ambulance dispatching…", style="dim red")),
+        )
+        return Panel(body, title="ridewme · driver box", border_style="red", padding=(1, 2))
+
     rows = []
 
     flash = snap.get("flash")
