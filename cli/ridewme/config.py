@@ -86,24 +86,23 @@ class Tuning:
     sensor_ring_s: float = 5.0                  # rolling buffer length (pre+post window always available)
     accel_baseline_tau_s: float = 3.0           # slow EMA baseline (absorbs gravity + mounting)
     motion_stale_s: float = 3.0                 # motion older than this -> gate assumes moving (fail-safe)
-    # Pre-gate
-    pregate_min_speed_mps: float = 1.0          # was the vehicle moving before the candidate? (demo: slow-walk ok)
-    # Layer 1 — trigger (cheap wake-up, not a decision) — demo-tuned, easy to reach.
-    # NB: this is deviation-FROM-BASELINE g (resting ~1g gravity is absorbed), so a
-    # ~2g total phone reading = ~1g of spike here.
-    accel_spike_g: float = 1.0                  # accel deviation (g) that wakes Layer 2
-    # Layer 2 — corroboration over the window — demo-tuned; STILL needs >= 2 of 3 to agree
+    # (position/GPS removed — crash uses ONLY accelerometer + gyroscope now)
+    pregate_min_speed_mps: float = 1.0          # unused (pre-gate removed for the demo)
+    # Layer 1 — trigger (cheap wake-up) — demo-tuned, easy to reach.
+    # NB: deviation-FROM-BASELINE g (resting ~1g gravity is absorbed).
+    accel_spike_g: float = 0.7                  # accel deviation (g) that wakes Layer 2
+    # Layer 2 — corroboration: accel change AND gyro change (both required) -> crash
     crash_l2_window_s: float = 2.0              # score this window around the candidate
-    jerk_g_per_s: float = 6.0                   # impact jerk — separates a crash from hard braking
-    gyro_axis_dps: float = 60.0                 # per-axis rotation (deg/s); need >= 2 axes (a hand twist hits this)
-    gyro_axes_required: int = 2
-    speed_drop_mps: float = 4.0                 # sudden GPS speed drop across the window...
-    speed_drop_end_mps: float = 4.0             # ...toward (near) zero — impact, not gradual braking
+    jerk_g_per_s: float = 4.0                   # impact jerk — separates a crash from a slow lean
+    gyro_axis_dps: float = 35.0                 # rotation (deg/s); any 1 axis over this counts as "gyro change"
+    gyro_axes_required: int = 1
+    speed_drop_mps: float = 4.0                 # unused (GPS speed-drop signal removed)
+    speed_drop_end_mps: float = 4.0             # unused
     severity_moderate_g: float = 1.5            # peak-Δg (deviation) severity bands: minor < 1.5 ...
     severity_severe_g: float = 2.5              # ... moderate 1.5–2.5 · severe > 2.5
-    # Layer 3 — behavioral confirmation window
-    crash_l3_window_s: float = 13.0             # base human window (12–15s)
-    crash_l3_window_severe_s: float = 8.0       # severe escalates faster (shorter window)
+    # Layer 3 — driver cancel window: a fixed 10s timer on the CLI
+    crash_l3_window_s: float = 10.0             # base human window (10s)
+    crash_l3_window_severe_s: float = 10.0      # same fixed 10s timer regardless of severity
     deescalate_speed_mps: float = 8.0           # "sustained normal driving" road speed
     deescalate_sustained_s: float = 10.0        # ...held this long -> de-escalate (cancel)
     crash_cooldown_s: float = 5.0               # after a terminal outcome, ignore new candidates

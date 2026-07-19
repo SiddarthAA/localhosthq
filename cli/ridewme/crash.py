@@ -135,17 +135,10 @@ class CrashEngine:
         self.motion.update(speed, gps_available, ts)
 
         # Layer 1 — trigger. Only when idle (no candidate, no incident, not cooling down).
+        # Accel change alone wakes Layer 2 — no GPS pre-gate (accelerometer + gyro only).
         if self._incident is None and self._pending is None and ts >= self._cooldown_until:
-            if dev >= self.t.accel_spike_g and self._pre_gate_ok(ts):
+            if dev >= self.t.accel_spike_g:
                 self._pending = _PendingL2(ts)   # collect the post-window, then corroborate
-
-    # ── pre-gate (design §2) ──────────────────────────────────────────
-    def _pre_gate_ok(self, ts: float) -> bool:
-        pre = [s for s in self.ring.window(ts, before=2.0, after=0.0) if s.ts <= ts - 0.3]
-        gps_pre = [s for s in pre if s.gps_available and s.speed_mps is not None]
-        if not gps_pre:
-            return True   # no GPS -> fail open into Layer 2 (better to over-evaluate than miss)
-        return max(s.speed_mps for s in gps_pre) >= self.t.pregate_min_speed_mps
 
     # ── periodic tick: Layer 2 eval + Layer 3 countdown ───────────────
     def tick(self, now: float) -> None:
@@ -178,23 +171,14 @@ class CrashEngine:
             if max(s.gyro[axis] for s in win) >= self.t.gyro_axis_dps
         )
 
-        gps_win = [s for s in win if s.gps_available and s.speed_mps is not None]
-        speed_drop = False
-        if gps_win:
-            speeds = [s.speed_mps for s in gps_win]
-            speed_drop = (max(speeds) - min(speeds) >= self.t.speed_drop_mps
-                          and min(speeds) <= self.t.speed_drop_end_mps)
-
         fired: list[str] = []
         if peak >= self.t.accel_spike_g and jerk >= self.t.jerk_g_per_s:
             fired.append(ACCEL_JERK)
         if axes_hot >= self.t.gyro_axes_required:
             fired.append(GYRO)
-        if speed_drop:
-            fired.append(SPEED_DROP)
 
         return Corroboration(
-            confirmed=len(fired) >= 2,
+            confirmed=len(fired) >= 2,   # accel change AND gyro change both required
             severity=self._severity(peak),
             peak_g=round(peak, 2), jerk=round(jerk, 1),
             signals_fired=fired, location=self._last_location,
@@ -226,18 +210,7 @@ class CrashEngine:
         inc = self._incident
         assert inc is not None
 
-        # Post-event motion (weighted de-escalation): sustained normal driving cancels.
-        m = self.motion.get()
-        moving_fast = m.gps_available and m.speed_mps is not None and m.speed_mps >= self.t.deescalate_speed_mps
-        if moving_fast:
-            if self._deesc_since is None:
-                self._deesc_since = now
-            elif now - self._deesc_since >= self.t.deescalate_sustained_s:
-                self._resolve(E.CANCELLED, now, reason=E.REASON_DEESCALATED)
-                return
-        else:
-            self._deesc_since = None
-
+        # 10s driver-cancel window; confirm when it elapses (no GPS de-escalation).
         if now >= inc.deadline:
             final_motion = "stopped" if self.motion.stationary_confident(now) else "moving"
             self._resolve(E.CONFIRMED, now, final_motion=final_motion)
@@ -260,7 +233,7 @@ class CrashEngine:
             return
         peak = self.t.severity_severe_g + 1.0 if severity == E.SEVERE else self.t.severity_moderate_g + 0.5
         r = Corroboration(True, severity, round(peak, 2), 90.0,
-                          [ACCEL_JERK, GYRO, SPEED_DROP], self._last_location)
+                          [ACCEL_JERK, GYRO], self._last_location)
         self._start_layer3(r, now)
 
     # ── terminal + emission ───────────────────────────────────────────
