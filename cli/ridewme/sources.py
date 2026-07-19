@@ -74,7 +74,7 @@ class PhoneFeatureSource:
         from .perception import FaceMeshDetector
 
         self._reader = _FreshestFrame(cfg.sensor_mjpeg_url)
-        self._det = FaceMeshDetector(cfg.model_path)
+        self._det = FaceMeshDetector(cfg.model_path, cfg.tuning)
         self._t0 = time.time()
         self.last_frame = None
 
@@ -88,7 +88,9 @@ class PhoneFeatureSource:
         return (True, raw, now)
 
     def viz_frame(self):
-        return (self.last_frame, self._det.landmarks_px)
+        # show the (brightened) frame the landmarker actually saw, so low-light boost is visible
+        return (self._det.display_frame if self._det.display_frame is not None else self.last_frame,
+                self._det.landmarks_px)
 
     def close(self):
         self._reader.close()
@@ -105,7 +107,7 @@ class ReplayFeatureSource:
 
         self._cv2 = cv2
         self._cap = cv2.VideoCapture(cfg.replay_video)
-        self._det = FaceMeshDetector(cfg.model_path)
+        self._det = FaceMeshDetector(cfg.model_path, cfg.tuning)
         self._n = 0
         self._fps = self._cap.get(cv2.CAP_PROP_FPS) or 15.0
         self.last_frame = None
@@ -123,7 +125,8 @@ class ReplayFeatureSource:
         return (True, raw, time.time())
 
     def viz_frame(self):
-        return (self.last_frame, self._det.landmarks_px)
+        return (self._det.display_frame if self._det.display_frame is not None else self.last_frame,
+                self._det.landmarks_px)
 
     def close(self):
         self._cap.release()

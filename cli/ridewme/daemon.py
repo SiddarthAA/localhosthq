@@ -81,6 +81,8 @@ class Daemon:
         self._panel_flash: tuple | None = None   # (msg, until_ts, style)
         self.viz = None                          # set to a VizState by main when --viz
         self._last_sensor: dict = {}             # freshest sensor packet (for the viz accel/gyro cards)
+        self._last_bright = 1.0                  # L0 frame brightness (0..1) for the viz low-light chip
+        self._last_lowlight = False              # was a low-light boost applied to the last frame?
 
     # ── shared state ──────────────────────────────────────────────────
     def _emit(self, type_: str, payload: dict, ts=None) -> dict:
@@ -174,6 +176,7 @@ class Daemon:
             "driver": self.cfg.driver_name, "uptime_s": time.time() - self._start_t,
             "show_mesh": (time.time() - self._start_t) < self.t.calibration_seconds,  # scan face ~10s, then points
             "alarm_intensity": esc.audio_intensity,   # drives the reddening video border
+            "brightness": _r(self._last_bright, 2), "low_light": self._last_lowlight,  # L0 low-light auto-boost
             "accel": self._last_sensor.get("accel") or self._last_sensor.get("accelG"),  # linear (~0-centered)
             "gyro": self._last_sensor.get("gyro"),
         }
@@ -210,6 +213,8 @@ class Daemon:
             dt = max(1e-3, ts - last)
             last = ts
             self._fps = 0.9 * self._fps + 0.1 * (1.0 / dt) if self._fps else 1.0 / dt
+            self._last_bright = getattr(raw, "brightness", 1.0)
+            self._last_lowlight = getattr(raw, "low_light", False)
 
             if self.naive is not None:
                 level = self.naive.update(raw)

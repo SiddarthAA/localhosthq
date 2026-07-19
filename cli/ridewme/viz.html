@@ -116,6 +116,7 @@
       <div class="vbody">
         <img id="vid" src="/stream.mjpeg" alt="feed"/>
         <span class="badge capbadge" id="capbadge" style="display:none">capturing face</span>
+        <span class="badge capbadge" id="lowlight" style="display:none;left:auto;right:11px;color:hsl(45 90% 60%);border-color:hsl(45 90% 60%/.55);background:hsl(45 90% 60%/.12)">◐ low light · boosting</span>
         <div class="voverlay"><span class="badge" id="vlevel">awake</span><span class="vscore mono" id="vscore">0</span></div>
       </div>
     </section>
@@ -201,6 +202,7 @@ function update(m){
   $('vscore').textContent=Math.round(m.score||0);
   setBadge($('level'),lvl,lvl); setBadge($('vlevel'),lvl,lvl);
   $('capbadge').style.display=m.show_mesh?'inline-flex':'none';
+  var _ll=$('lowlight'); if(_ll){_ll.style.display=m.low_light?'inline-flex':'none'; if(m.low_light)_ll.textContent='◐ low light '+Math.round((m.brightness||0)*100)+'% · boosting';}
   const s=m.signals||{};
   $('v_perclos').textContent=s.perclos!=null?s.perclos.toFixed(2):'—';
   $('v_ear').textContent=s.ear!=null?s.ear.toFixed(2):'—';

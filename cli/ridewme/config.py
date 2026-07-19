@@ -32,6 +32,13 @@ def _b(name: str, default: bool) -> bool:
 class Tuning:
     """Engine tuning. Deviation-from-baseline everywhere possible (L2), never raw globals."""
 
+    # L0 — low-light frame normalization (feed the landmarker a readable frame so eye
+    # geometry survives the dark). Global brightness check + a bounded, noise-safe boost.
+    lowlight_enabled: bool = True
+    lowlight_target_luma: float = 0.42        # target mean brightness (0..1); boost frames below this
+    lowlight_max_gain: float = 3.0            # cap the gain so we lift shadows without amplifying noise
+    lowlight_clahe_clip: float = 2.0          # CLAHE clip limit — local contrast for eyes in shadow
+
     # L2 — face capture / baseline (first 10s: scan the face, learn this driver's normal)
     calibration_seconds: float = 10.0
 

@@ -26,6 +26,8 @@ class RawFeatures:
     pitch_deg: float    # head pitch in degrees; lower = looking/nodding down
     eyeblink: float = 0.0  # optional blendshape corroboration, 0..1 (0 = unknown)
     jawopen: float = 0.0   # optional blendshape, 0..1
+    brightness: float = 1.0  # L0 frame mean luminance, 0..1 (1.0 when no camera)
+    low_light: bool = False  # was a low-light boost applied to this frame?
 
 
 @dataclass

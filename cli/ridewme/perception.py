@@ -95,10 +95,36 @@ def _pitch_deg(matrix) -> float:
     return math.degrees(math.atan2(-r[2, 0], sy))
 
 
+def normalize_lighting(frame_bgr, *, enabled=True, target=0.42, max_gain=3.0, clip=2.0):
+    """L0 global brightness check + bounded low-light boost, so the landmarker gets a
+    readable frame in the dark. Returns (frame_for_detection, mean_brightness_0_1, boosted).
+
+    Measures mean luminance; if it's below `target`, lifts it (gain capped at `max_gain`
+    so we don't amplify sensor noise) and applies CLAHE for local contrast around the
+    eyes. Only the luma channel is touched — colour is left alone."""
+    import cv2
+    import numpy as np
+
+    ycrcb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2YCrCb)
+    y = ycrcb[:, :, 0]
+    brightness = float(np.mean(y)) / 255.0
+    if not enabled or brightness >= target:
+        return frame_bgr, brightness, False
+
+    gain = min(max_gain, target / max(brightness, 0.04))
+    y2 = cv2.convertScaleAbs(y, alpha=gain, beta=0.0)
+    try:
+        y2 = cv2.createCLAHE(clipLimit=clip, tileGridSize=(8, 8)).apply(y2)
+    except Exception:
+        pass
+    ycrcb[:, :, 0] = y2
+    return cv2.cvtColor(ycrcb, cv2.COLOR_YCrCb2BGR), brightness, True
+
+
 class FaceMeshDetector:
     """Wraps MediaPipe FaceLandmarker in VIDEO mode; returns RawFeatures per frame."""
 
-    def __init__(self, model_path: str | Path):
+    def __init__(self, model_path: str | Path, tuning=None):
         try:
             import mediapipe as mp
             from mediapipe.tasks import python as mp_python
@@ -120,17 +146,36 @@ class FaceMeshDetector:
         with _quiet_native_stderr():   # hide glog/absl/XNNPACK init spam
             self._detector = vision.FaceLandmarker.create_from_options(opts)
         self.landmarks_px: list = []   # last frame's 478 landmark pixel points (for --viz overlay)
+        self._t = tuning
+        self.display_frame = None      # the (possibly brightened) frame we fed the landmarker
+        self.brightness = 1.0          # last frame's mean luminance (0..1)
+        self.low_light = False         # was a low-light boost applied last frame?
 
     def detect(self, frame_bgr, ts_ms: int) -> RawFeatures:
         import cv2
 
-        rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        h, w = frame_bgr.shape[:2]
+        t = self._t
+        try:
+            frame_proc, self.brightness, self.low_light = normalize_lighting(
+                frame_bgr,
+                enabled=(True if t is None else t.lowlight_enabled),
+                target=(0.42 if t is None else t.lowlight_target_luma),
+                max_gain=(3.0 if t is None else t.lowlight_max_gain),
+                clip=(2.0 if t is None else t.lowlight_clahe_clip),
+            )
+        except Exception:
+            frame_proc, self.brightness, self.low_light = frame_bgr, 1.0, False
+        self.brightness = round(float(self.brightness), 3)
+        self.display_frame = frame_proc
+
+        rgb = cv2.cvtColor(frame_proc, cv2.COLOR_BGR2RGB)
+        h, w = frame_proc.shape[:2]
         mp_image = self._mp.Image(image_format=self._mp.ImageFormat.SRGB, data=rgb)
         res = self._detector.detect_for_video(mp_image, int(ts_ms))
         if not res.face_landmarks:
             self.landmarks_px = []
-            return RawFeatures(face_present=False, ear=0.0, mar=0.0, pitch_deg=0.0)
+            return RawFeatures(face_present=False, ear=0.0, mar=0.0, pitch_deg=0.0,
+                               brightness=self.brightness, low_light=self.low_light)
 
         lm = res.face_landmarks[0]
         pts = [(p.x * w, p.y * h) for p in lm]
@@ -151,6 +196,7 @@ class FaceMeshDetector:
         return RawFeatures(
             face_present=True, ear=ear, mar=mar, pitch_deg=pitch,
             eyeblink=eyeblink, jawopen=jawopen,
+            brightness=self.brightness, low_light=self.low_light,
         )
 
     def close(self) -> None:
