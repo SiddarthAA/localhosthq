@@ -6,7 +6,7 @@
 // merges both into one DriverState. Backend ts are seconds → ×1000 for the UI.
 
 import { toast } from 'sonner'
-import { FLEET_WS, PRIMARY_DRIVER, PRIMARY_NAME, getMode, subscribeMode } from './config'
+import { FLEET_WS, HOSPITAL, PRIMARY_DRIVER, PRIMARY_NAME, getMode, subscribeMode } from './config'
 import { mapIncident } from './api'
 import { chime } from './sound'
 import { liveSim } from './data'
@@ -198,17 +198,15 @@ class FleetClient {
       }
       case 'dispatch': {
         if (msg.driver_id !== PRIMARY_DRIVER) return
-        const inc = msg.incident ?? {}
-        const loc = inc.location ?? {}
         pushAlert({
           ts: Date.now(),
           kind: 'dispatch',
           tone: 'alert',
-          title: 'Emergency dispatched',
-          detail: `${inc.severity ?? 'crash'} · responder @ ${(loc.lat ?? 0).toFixed(3)}, ${(loc.lon ?? 0).toFixed(3)}`,
+          title: 'Pinging nearest hospital',
+          detail: `${HOSPITAL.short} · ambulance dispatching · first responders notified`,
         })
         toast.error('Emergency dispatched', {
-          description: `${inc.severity ?? 'crash'} confirmed — responder notified`,
+          description: `Pinging nearest hospital — ${HOSPITAL.short}`,
         })
         this.emit(true)
         return

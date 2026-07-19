@@ -24,6 +24,15 @@ export const FLEET_WS = `${WS_BASE}/ws/fleet`
 export const PRIMARY_DRIVER = (ENV.VITE_DRIVER_ID?.trim() || 'driver-1')
 export const PRIMARY_NAME = (ENV.VITE_DRIVER_NAME?.trim() || 'Driver 1')
 
+// Hardcoded nearest responder for the demo (matches the backend dispatch record).
+export const HOSPITAL = {
+  name: 'Apollo Spectra Hospitals — Koramangala, Bengaluru',
+  short: 'Apollo Spectra · Koramangala',
+  address:
+    '143, 1st Cross Rd, near Nagarjuna Hotel, KHB Colony, 5th Block, Koramangala, Bengaluru, Karnataka 560095',
+  emergencyLine: '1066',
+}
+
 /* ── runtime mode store (persisted across reloads) ──────────────────── */
 
 const MODE_KEY = 'ridewme.mode'

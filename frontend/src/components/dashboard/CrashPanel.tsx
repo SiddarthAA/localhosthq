@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
-import { AlertOctagon, Ambulance, MapPin, ShieldCheck, X } from 'lucide-react'
+import { AlertOctagon, Ambulance, Hospital, MapPin, ShieldCheck, X } from 'lucide-react'
 import { useLive } from '@/lib/useLive'
 import { liveSource } from '@/lib/fleet'
 import { useMode } from '@/lib/hooks'
+import { HOSPITAL } from '@/lib/config'
 import { Button } from '@/components/ui/button'
 
 export default function CrashPanel() {
@@ -79,11 +80,34 @@ export default function CrashPanel() {
         )}
 
         {inc.status === 'confirmed' && (
-          <div className="flex items-center gap-2 border border-destructive/40 bg-destructive/10 px-3 py-2">
-            <Ambulance className="size-4 text-destructive" />
-            <p className="text-xs text-foreground">
-              Dispatched → responder @ {inc.location.lat.toFixed(3)}, {inc.location.lon.toFixed(3)} · vehicle {inc.final_motion}
-            </p>
+          <div className="border border-destructive/50 bg-destructive/10 px-3 py-3">
+            <div className="flex items-center gap-2">
+              <span className="relative flex size-2.5">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-70" />
+                <span className="relative inline-flex size-2.5 rounded-full bg-destructive" />
+              </span>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-destructive">
+                Pinging nearest hospital
+              </p>
+            </div>
+            <div className="mt-2.5 flex items-start gap-2.5">
+              <div className="flex size-9 shrink-0 items-center justify-center border border-destructive/40 bg-destructive/10">
+                <Hospital className="size-5 text-destructive" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold leading-tight text-foreground">{HOSPITAL.name}</p>
+                <p className="mt-0.5 font-mono text-[10px] leading-relaxed text-muted-foreground">
+                  {HOSPITAL.address}
+                </p>
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-center gap-2 border-t border-destructive/25 pt-2">
+              <Ambulance className="size-3.5 shrink-0 text-destructive" />
+              <p className="font-mono text-[10px] text-foreground">
+                Ambulance dispatching · line {HOSPITAL.emergencyLine} · vehicle {inc.final_motion} · fleet &amp;
+                first responders notified
+              </p>
+            </div>
           </div>
         )}
 
