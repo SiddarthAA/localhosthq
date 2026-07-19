@@ -90,11 +90,11 @@ class Tuning:
     pregate_min_speed_mps: float = 1.0          # unused (pre-gate removed for the demo)
     # Layer 1 — trigger (cheap wake-up) — demo-tuned, easy to reach.
     # NB: deviation-FROM-BASELINE g (resting ~1g gravity is absorbed).
-    accel_spike_g: float = 0.7                  # accel deviation (g) that wakes Layer 2
+    accel_spike_g: float = 0.4                  # accel deviation (g) that wakes Layer 2 (very low for demo)
     # Layer 2 — corroboration: accel change AND gyro change (both required) -> crash
-    crash_l2_window_s: float = 2.0              # score this window around the candidate
+    crash_l2_window_s: float = 1.5              # score this window around the candidate
     jerk_g_per_s: float = 4.0                   # impact jerk — separates a crash from a slow lean
-    gyro_axis_dps: float = 35.0                 # rotation (deg/s); any 1 axis over this counts as "gyro change"
+    gyro_axis_dps: float = 20.0                 # rotation (deg/s); any 1 axis over this counts as "gyro change"
     gyro_axes_required: int = 1
     speed_drop_mps: float = 4.0                 # unused (GPS speed-drop signal removed)
     speed_drop_end_mps: float = 4.0             # unused
@@ -105,7 +105,7 @@ class Tuning:
     crash_l3_window_severe_s: float = 10.0      # same fixed 10s timer regardless of severity
     deescalate_speed_mps: float = 8.0           # "sustained normal driving" road speed
     deescalate_sustained_s: float = 10.0        # ...held this long -> de-escalate (cancel)
-    crash_cooldown_s: float = 5.0               # after a terminal outcome, ignore new candidates
+    crash_cooldown_s: float = 2.0               # after a terminal outcome, ignore new candidates
 
     # correlation (design §5) — crash payload's fatigue_context
     fatigue_window_min: float = 5.0             # look back this far for recent fatigue

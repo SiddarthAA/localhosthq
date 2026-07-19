@@ -322,8 +322,11 @@ class Daemon:
             for pkt in self.ssrc.drain():          # every source-timestamped sample, no loss
                 if not pkt:
                     continue
-                src = pkt.get("t")
-                ts = src / 1000.0 if isinstance(src, (int, float)) else time.time()
+                # Use the SERVER clock for ingest so it matches crash.tick() below.
+                # (The phone's `t` = Date.now on the iPhone; it drifts vs shawarma's
+                # clock, and mixing the two broke Layer-2 timing + the cooldown — a
+                # skew could permanently gate every candidate, so nothing ever fired.)
+                ts = time.time()
                 self.crash.ingest(pkt, ts)
                 self._last_sensor = pkt             # freshest packet for the viz accel/gyro cards
             self.crash.tick(time.time())            # Layer 2 eval + Layer 3 countdown
